@@ -5,16 +5,18 @@ const PostSchema = mongoose.Schema(
         postedBy: {
             type: String,
             required: [true, 'username required'],
+            default: ''
         },
         postContent: {
             type: String,
             required: [true, 'post content required'],
+            default: ''
         },
 
         postImage: {
             type: String,
             required: false,
-            default: null
+            default: ''
         }
     },
     {

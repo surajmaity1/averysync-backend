@@ -23,7 +23,7 @@ const createPost = async (req, res) => {
     try {
         const { postedBy, postContent, postImage } = req.body;
 
-        if (!postedBy || !postContent) {
+        if (!postedBy && !postContent) {
             res.status(400).json({
                 status: 'body mission',
                 message: 'request body required'
@@ -46,7 +46,7 @@ const createPost = async (req, res) => {
         }
 
         const post = await Post.create(req.body);
-        res.status(201).json(post);
+        res.status(201).json({message: `post created successfully`});
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
