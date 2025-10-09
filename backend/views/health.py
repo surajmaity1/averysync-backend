@@ -2,6 +2,9 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.response import Response
 from backend.constants.health import AppHealthStatus, ComponentHealthStatus
+from backend_project.db.config import DBManager
+
+db_manager = DBManager()
 
 
 class HealthView(APIView):
@@ -16,9 +19,11 @@ class HealthView(APIView):
         }
     )
     def get(self, request):
-        db_status = ComponentHealthStatus.UP.name
-        overall_status = AppHealthStatus.UP
+        global db_manager
         
+        db_status = ComponentHealthStatus.UP.name if db_manager.check_db_health() else ComponentHealthStatus.DOWN.name
+        overall_status = AppHealthStatus.UP
+
         response = {
             'status': overall_status.name,
             'components': {
