@@ -107,3 +107,4 @@ cython_debug/
 /logs
 
 /postgres_data
+.idea/
