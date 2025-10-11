@@ -14,7 +14,8 @@ SECRET_KEY = 'django-insecure-o8kw8vwdyoa+1xh%ca0ovm94j=smhoym55hod0k74yw791m@43
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
+ALLOWED_HOSTS = ['127.0.0.1','localhost','https://backend-api-django.onrender.com','backend-api-django.onrender.com']
 
 LOGGING = {
     "version": 1,
@@ -53,7 +54,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS').split(',')
+CORS_ALLOWED_ORIGINS = ['http://127.0.0.1','http://localhost','https://backend-api-django.onrender.com']
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
