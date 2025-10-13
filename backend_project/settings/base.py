@@ -5,7 +5,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -15,7 +14,7 @@ SECRET_KEY = 'django-insecure-o8kw8vwdyoa+1xh%ca0ovm94j=smhoym55hod0k74yw791m@43
 DEBUG = True
 
 # ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
-ALLOWED_HOSTS = ['127.0.0.1','localhost','https://backend-api-django.onrender.com','backend-api-django.onrender.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'https://backend-api-django.onrender.com', 'backend-api-django.onrender.com']
 
 LOGGING = {
     "version": 1,
@@ -54,7 +53,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = ['http://127.0.0.1','http://localhost','https://backend-api-django.onrender.com']
+CORS_ALLOWED_ORIGINS = ['http://127.0.0.1', 'http://localhost', 'https://backend-api-django.onrender.com']
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -67,6 +66,7 @@ REST_FRAMEWORK = {
 SERVICES = {
     'FRONTEND': {
         'URL': os.getenv('FRONTEND_BASE_URL', 'http://localhost:3000'),
+        'REDIRECT_PATH': os.getenv('FRONTEND_REDIRECT_PATH', 'feed'),
     },
     'BACKEND': {
         'URL': os.getenv('BACKEND_BASE_URL', 'http://localhost:8000'),
@@ -119,12 +119,9 @@ TEMPLATES = [
     },
 ]
 
-
 ROOT_URLCONF = 'backend_project.urls'
 
-
 WSGI_APPLICATION = 'backend_project.wsgi.application'
-
 
 PUBLIC_PATHS = [
     '/favicon.ico',
@@ -142,9 +139,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
 
 # Postgres Configuration
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
@@ -152,3 +147,21 @@ POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
 POSTGRES_USER = os.getenv('POSTGRES_USER', 'backend_user')
 POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'todo_password')
 POSTGRES_DB = os.getenv('POSTGRES_DB', 'todo_postgres')
+ENGINE = 'django.db.backends.postgresql'
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": POSTGRES_DB,
+        "USER": POSTGRES_USER,
+        "PASSWORD": POSTGRES_PASSWORD,
+        "HOST": POSTGRES_HOST,
+        "PORT": POSTGRES_PORT,
+    }
+}
+
+GOOGLE_OAUTH = {
+    "CLIENT_ID": os.getenv("GOOGLE_OAUTH_CLIENT_ID"),
+    "CLIENT_SECRET": os.getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
+    "REDIRECT_URI": os.getenv("GOOGLE_OAUTH_REDIRECT_URI"),
+}
