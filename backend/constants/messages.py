@@ -11,3 +11,8 @@ class ValidationErrors:
     EMAIL_REQUIRED = 'Email Id required'
     NAME_REQUIRED = 'Name Id required'
     IMAGE_REQUIRED = 'Image Id required'
+
+
+class RepositoryError:
+    USER_NOT_FOUND = 'User not found: {0}'
+    USER_CREATE_UPDATE_FAILED = 'User create/update failed: {0}'

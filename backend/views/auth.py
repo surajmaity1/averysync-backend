@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from backend.services.google_oauth_service import GoogleOAuthService
 from rest_framework import status
 from django.conf import settings
+from backend.services.user_service import UserService
 
 class GoogleLogInView(APIView):
     @extend_schema(
@@ -35,30 +36,30 @@ class GoogleLogInView(APIView):
 
 class GoogleCallbackView(APIView):
     def get(self, request: Request):
-        code = request.query_params.get('code')
-        state = request.query_params.get('state')
-        error = request.query_params.get('error')
-
-        frontend = settings.SERVICES.get('FRONTEND', {})
-        frontend_base_url = f'{frontend.get('URL', '')}/{frontend.get('REDIRECT_PATH', '')}'
-
-        if error:
-            return HttpResponseRedirect(f'{frontend_base_url}?error={error}')
-        if not code:
-            return HttpResponseRedirect(f'{frontend_base_url}?error=missing_code')
-        if not state:
-            return HttpResponseRedirect(f'{frontend_base_url}?error=missing_state')
-        
-        stored_state = request.session.get('oauth_state')
-
-        if not stored_state or stored_state != state:
-            return HttpResponseRedirect(f'{frontend_base_url}?error=invalid_state')
-        
         try:
-            google_data = GoogleOAuthService.handle_calback(code)
-            
+            code = request.query_params.get('code')
+            state = request.query_params.get('state')
+            error = request.query_params.get('error')
 
-        return Response({
-                'statusCode': status.HTTP_200_OK,
-                'message': 'GoogleCallbackView',
-        })
+            frontend = settings.SERVICES.get('FRONTEND', {})
+            frontend_base_url = f'{frontend.get('URL', '')}/{frontend.get('REDIRECT_PATH', '')}'
+
+            if error:
+                return HttpResponseRedirect(f'{frontend_base_url}?error={error}')
+            if not code:
+                return HttpResponseRedirect(f'{frontend_base_url}?error=missing_code')
+            if not state:
+                return HttpResponseRedirect(f'{frontend_base_url}?error=missing_state')
+            
+            stored_state = request.session.get('oauth_state')
+            print(f'stored_state: {stored_state}')
+            print(f'state: {state}')
+            if not stored_state or stored_state != state:
+                return HttpResponseRedirect(f'{frontend_base_url}?error=invalid_state')
+
+            google_user_details = GoogleOAuthService.handle_calback(code)
+            user = UserService.create_or_update_user(google_user_details)
+
+            return HttpResponseRedirect(f'{frontend_base_url}?success=true')
+        except Exception as exception:
+            return HttpResponseRedirect(f'{frontend_base_url}?error=auth_failed')

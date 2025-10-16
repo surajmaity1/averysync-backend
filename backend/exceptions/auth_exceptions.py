@@ -1,4 +1,4 @@
-from backend.constants.messages import ApiErrors
+from backend.constants.messages import ApiErrors, RepositoryError
 
 
 class BaseAuthException(Exception):
@@ -14,4 +14,9 @@ class AuthException(BaseAuthException):
 
 class APIException(BaseAuthException):
     def __init__(self, msg: str = ApiErrors.GOOGLE_API_ERROR):
+        super().__init__(msg)
+
+
+class UserNotFoundException(BaseAuthException):
+    def __init__(self, msg: str = RepositoryError.USER_NOT_FOUND):
         super().__init__(msg)

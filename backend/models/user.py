@@ -10,3 +10,18 @@ class UserModel(models.Model):
     sign_in_provider = models.CharField(max_length=20, null=False)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(null=True, blank=True)
+
+
+    class Meta:
+        db_table = 'users'
+        indexes = [
+            models.Index(fields=['user_id']),
+            models.Index(fields=['email']),
+        ]
+    
+
+    def save(self, *args, **kwards):
+        if not self.pk:
+            self.created_at = timezone.now()
+        self.updated_at = timezone.now()
+        super().save(*args, **kwards)

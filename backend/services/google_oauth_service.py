@@ -81,20 +81,17 @@ class GoogleOAuthService:
             raise APIException(ApiErrors.GOOGLE_API_ERROR)
 
 
-
-
-
     @classmethod
     def handle_calback(cls, authorization_code: str) -> dict:
         try:
             tokens = cls._exchange_code_for_tokens(authorization_code)
-            user_details = cls._fetch_user_details(tokens)
+            user_details = cls._fetch_user_details(tokens['access_token'])
 
             return {
                 'user_id': user_details['id'],
                 'email': user_details['email'],
                 'name': user_details['name'],
-                'image': user_details.get('image'),
+                'image': user_details.get('picture'),
             }
         except Exception as exception:
             if isinstance(exception, APIException):

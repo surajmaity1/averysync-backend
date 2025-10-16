@@ -1,6 +1,9 @@
 from backend.models.user import UserModel
-from backend.constants.messages import ValidationErrors
+from backend.constants.messages import ValidationErrors, RepositoryError
 from rest_framework.exceptions import ValidationError
+from backend.repositories.user_repositories import UserRepository
+from backend.exceptions.auth_exceptions import UserNotFoundException, APIException
+
 
 class UserService:
     @classmethod
@@ -20,10 +23,12 @@ class UserService:
             raise ValidationError(validation_errors)
 
 
-
-
     @classmethod
     def create_or_update_user(cls, google_user_details: dict) -> UserModel:
         try:
             cls._validate_google_user_details(google_user_details)
-            return User
+            return UserRepository.create_or_update(google_user_details)
+        except (UserNotFoundException, APIException, ValidationError):
+            raise
+        except Exception as exception:
+            raise APIException(RepositoryError.USER_CREATE_UPDATE_FAILED.format(str(exception))) from exception
