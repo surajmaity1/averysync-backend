@@ -7,6 +7,8 @@ from backend.services.google_oauth_service import GoogleOAuthService
 from rest_framework import status
 from django.conf import settings
 from backend.services.user_service import UserService
+from backend.utils.jwt_utils import generate_token_pair
+
 
 class GoogleLogInView(APIView):
     @extend_schema(
@@ -52,14 +54,23 @@ class GoogleCallbackView(APIView):
                 return HttpResponseRedirect(f'{frontend_base_url}?error=missing_state')
             
             stored_state = request.session.get('oauth_state')
-            print(f'stored_state: {stored_state}')
-            print(f'state: {state}')
             if not stored_state or stored_state != state:
                 return HttpResponseRedirect(f'{frontend_base_url}?error=invalid_state')
 
             google_user_details = GoogleOAuthService.handle_calback(code)
             user = UserService.create_or_update_user(google_user_details)
+            
+            # TODO: solve this below issue: Expecting a PEM-formatted key
+            # tokens = generate_token_pair(
+            #     {
+            #         'user_id': str(user.user_id),
+            #         'name': user.name,
+            #     }
+            # )
 
-            return HttpResponseRedirect(f'{frontend_base_url}?success=true')
+            response = HttpResponseRedirect(f'{frontend_base_url}?success=true')
+            # self._set_auth_cookies(response, tokens)
+            
+            return response
         except Exception as exception:
             return HttpResponseRedirect(f'{frontend_base_url}?error=auth_failed')

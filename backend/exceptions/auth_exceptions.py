@@ -1,4 +1,4 @@
-from backend.constants.messages import ApiErrors, RepositoryError
+from backend.constants.messages import ApiErrors, RepositoryError, AuthErrorMessages
 
 
 class BaseAuthException(Exception):
@@ -19,4 +19,14 @@ class APIException(BaseAuthException):
 
 class UserNotFoundException(BaseAuthException):
     def __init__(self, msg: str = RepositoryError.USER_NOT_FOUND):
+        super().__init__(msg)
+
+
+class TokenInvalidError(BaseAuthException):
+    def __init__(self, msg: str = AuthErrorMessages.TOKEN_INVALID):
+        super().__init__(msg)
+
+
+class TokenExpiredError(BaseAuthException):
+    def __init__(self, msg: str = AuthErrorMessages.TOKEN_EXPIRED):
         super().__init__(msg)

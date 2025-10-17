@@ -16,3 +16,8 @@ class ValidationErrors:
 class RepositoryError:
     USER_NOT_FOUND = 'User not found: {0}'
     USER_CREATE_UPDATE_FAILED = 'User create/update failed: {0}'
+    
+    
+class AuthErrorMessages:
+    TOKEN_INVALID = 'Invalid token'
+    TOKEN_EXPIRED = 'Token expired'
