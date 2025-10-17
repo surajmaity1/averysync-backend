@@ -11,7 +11,14 @@ source venv/Scripts/activate
 python -m pip install -r requirements.txt
 ```
 
-
+### Create DB Table and Schema and change the schema:
+```
+CREATE DATABASE backend_db
+\c backend_db
+show search_path
+set search_path to backend_db, public
+ALTER ROLE postgres_user_name set SEARCH_PATH = backend_db
+```
 
 ```
 python manage.py runserver

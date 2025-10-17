@@ -157,6 +157,9 @@ DATABASES = {
         "PASSWORD": POSTGRES_PASSWORD,
         "HOST": POSTGRES_HOST,
         "PORT": POSTGRES_PORT,
+        'OPTIONS': {
+            'options': f'-c search_path={POSTGRES_DB},public'
+        },
     }
 }
 
