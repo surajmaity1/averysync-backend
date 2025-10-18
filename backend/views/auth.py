@@ -8,6 +8,7 @@ from rest_framework import status
 from django.conf import settings
 from backend.services.user_service import UserService
 from backend.utils.jwt_utils import generate_token_pair
+from backend.constants.messages import ApplicationMessages
 
 
 class GoogleLogInView(APIView):
@@ -103,3 +104,30 @@ class GoogleCallbackView(APIView):
             max_age=settings.JWT_CONFIG.get('REFRESH_TOKEN_LIFETIME'),
             **config
         )
+
+
+class LogOutView(APIView):
+    def post(self, request: Request):
+        request.session.flush()
+        
+        response = Response({
+            'statusCode': status.HTTP_200_OK,
+            'message': ApplicationMessages.GOOGLE_LOGOUT_SUCCESS,
+            'data': {'success': True}
+        })
+        
+        delete_cookies_config = {
+            'path': '/',
+            'domain': settings.COOKIE_SETTINGS.get('COOKIE_DOMAIN'),
+        }
+        response.delete_cookie(settings.COOKIE_SETTINGS.get('ACCESS_TOKEN_COOKIE_NAME'), **delete_cookies_config)
+        response.delete_cookie(settings.COOKIE_SETTINGS.get('REFRESH_TOKEN_COOKIE_NAME'), **delete_cookies_config)
+
+        delete_session_config = {
+            'path': getattr(settings, 'SESSION_COOKIE_PATH', '/'),
+            'domain': getattr(settings, 'SESSION_COOKIE_DOMAIN', '/'),
+        }
+        
+        response.delete_cookie('sessionid', **delete_session_config)
+        
+        return response

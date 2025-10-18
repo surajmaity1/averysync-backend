@@ -21,3 +21,7 @@ class RepositoryError:
 class AuthErrorMessages:
     TOKEN_INVALID = 'Invalid token'
     TOKEN_EXPIRED = 'Token expired'
+
+
+class ApplicationMessages:
+    GOOGLE_LOGOUT_SUCCESS = 'Logged out successfully from Google'

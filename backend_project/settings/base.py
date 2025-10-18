@@ -145,8 +145,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
 POSTGRES_USER = os.getenv('POSTGRES_USER', 'backend_user')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'todo_password')
-POSTGRES_DB = os.getenv('POSTGRES_DB', 'todo_postgres')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'backend_password')
+POSTGRES_DB = os.getenv('POSTGRES_DB', 'backend_postgres')
 ENGINE = 'django.db.backends.postgresql'
 
 DATABASES = {
@@ -178,8 +178,8 @@ GOOGLE_OAUTH = {
 }
 
 COOKIE_SETTINGS = {
-    "ACCESS_TOKEN_COOKIE_NAME": os.getenv("ACCESS_TOKEN_COOKIE_NAME", "todo-access"),
-    "REFRESH_TOKEN_COOKIE_NAME": os.getenv("REFRESH_TOKEN_COOKIE_NAME", "todo-refresh"),
+    "ACCESS_TOKEN_COOKIE_NAME": os.getenv("ACCESS_TOKEN_COOKIE_NAME", "backend-access"),
+    "REFRESH_TOKEN_COOKIE_NAME": os.getenv("REFRESH_TOKEN_COOKIE_NAME", "backend-refresh"),
     "COOKIE_PATH": "/",
     "COOKIE_DOMAIN": os.getenv("COOKIE_DOMAIN", "localhost"),
     "COOKIE_SECURE": os.getenv("COOKIE_SECURE", "True").lower() == "true",
