@@ -1,8 +1,6 @@
 import secrets
 from urllib.parse import urlencode
-
 from django.conf import settings
-
 from backend.constants.messages import ApiErrors
 from backend.exceptions.auth_exceptions import AuthException, APIException
 import requests

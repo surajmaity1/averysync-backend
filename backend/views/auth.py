@@ -60,17 +60,46 @@ class GoogleCallbackView(APIView):
             google_user_details = GoogleOAuthService.handle_calback(code)
             user = UserService.create_or_update_user(google_user_details)
             
-            # TODO: solve this below issue: Expecting a PEM-formatted key
-            # tokens = generate_token_pair(
-            #     {
-            #         'user_id': str(user.user_id),
-            #         'name': user.name,
-            #     }
-            # )
+            tokens = generate_token_pair(
+                {
+                    'user_id': str(user.user_id),
+                    'name': user.name,
+                }
+            )
 
             response = HttpResponseRedirect(f'{frontend_base_url}?success=true')
-            # self._set_auth_cookies(response, tokens)
+            self._set_auth_cookies(response, tokens)
+            request.session.pop('oauth_state', None)
             
             return response
         except Exception as exception:
+            print(str(exception))
             return HttpResponseRedirect(f'{frontend_base_url}?error=auth_failed')
+
+
+    def _get_cookie_config(self):
+        return {
+            'path': '/',
+            'domain': settings.COOKIE_SETTINGS.get('COOKIE_DOMAIN'),
+            'httponly': settings.COOKIE_SETTINGS.get('COOKIE_HTTPONLY'),
+            'secure': settings.COOKIE_SETTINGS.get('COOKIE_SECURE'),
+            'samesite': settings.COOKIE_SETTINGS.get('COOKIE_SAMESITE'),
+        }
+    
+    
+    def _set_auth_cookies(self, response, tokens):
+        config = self._get_cookie_config()
+        
+        response.set_cookie(
+            settings.COOKIE_SETTINGS.get('ACCESS_TOKEN_COOKIE_NAME'),
+            tokens['access_token'],
+            max_age=settings.JWT_CONFIG.get('ACCESS_TOKEN_LIFETIME'),
+            **config
+        )
+        
+        response.set_cookie(
+            settings.COOKIE_SETTINGS.get('REFRESH_TOKEN_COOKIE_NAME'),
+            tokens['refresh_token'],
+            max_age=settings.JWT_CONFIG.get('REFRESH_TOKEN_LIFETIME'),
+            **config
+        )

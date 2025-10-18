@@ -9,6 +9,13 @@ python -m pip install virtualenv
 python -m virtualenv venv
 source venv/Scripts/activate
 python -m pip install -r requirements.txt
+python manage.py runserver
+```
+
+### GENERATE PRIVATE & PUBLIC KEY:
+```
+openssl genrsa -out private_key.pem 2048
+openssl rsa -in private_key.pem -pubout -out public_key.pem
 ```
 
 ### Create DB Table and Schema and change the schema:
@@ -18,10 +25,6 @@ CREATE DATABASE backend_db
 show search_path
 set search_path to backend_db, public
 ALTER ROLE postgres_user_name set SEARCH_PATH = backend_db
-```
-
-```
-python manage.py runserver
 ```
 
 APIs:

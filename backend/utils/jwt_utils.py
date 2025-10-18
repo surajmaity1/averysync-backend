@@ -52,11 +52,10 @@ def validate_token(token: str, token_type: str) -> dict:
 
 
 def generate_token_pair(user_details: dict) -> dict:
-    access_token = generate_token(user_details, 'ACCESS')
-    refresh_token = generate_token(user_details, 'REFRESH')
+    access_token = generate_token(user_details, 'Access')
+    refresh_token = generate_token(user_details, 'Refresh')
     
     return {
         'access_token': access_token,
         'refresh_token': refresh_token,
-        'expires_in': settings.JWT_CONFIG.get('ACCESS_TOKEN_LIFETIME')
     }

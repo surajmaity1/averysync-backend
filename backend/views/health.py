@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from backend.constants.health import AppHealthStatus, ComponentHealthStatus
 from backend_project.db.config import DBManager
 
+
 db_manager = DBManager()
 
 

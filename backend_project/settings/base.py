@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-o8kw8vwdyoa+1xh%ca0ovm94j=smhoym55hod0k74yw791m@43'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-o8kw8vwdyoa+1xh%ca0ovm94j=smhoym55hod0k74yw791m@43')
 
 DEBUG = True
 
@@ -166,6 +166,8 @@ DATABASES = {
 JWT_CONFIG = {
     'ACCESS_TOKEN_LIFETIME': int(os.getenv('ACCESS_TOKEN_LIFETIME', '3600')),
     'REFRESH_TOKEN_LIFETIME': int(os.getenv('REFRESH_TOKEN_LIFETIME', '604800')),
+    "PRIVATE_KEY": os.getenv("PRIVATE_KEY"),
+    "PUBLIC_KEY": os.getenv("PUBLIC_KEY"),
     'ALGORITHM': 'RS256',
 }
 
@@ -173,4 +175,14 @@ GOOGLE_OAUTH = {
     "CLIENT_ID": os.getenv("GOOGLE_OAUTH_CLIENT_ID"),
     "CLIENT_SECRET": os.getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
     "REDIRECT_URI": os.getenv("GOOGLE_OAUTH_REDIRECT_URI"),
+}
+
+COOKIE_SETTINGS = {
+    "ACCESS_TOKEN_COOKIE_NAME": os.getenv("ACCESS_TOKEN_COOKIE_NAME", "todo-access"),
+    "REFRESH_TOKEN_COOKIE_NAME": os.getenv("REFRESH_TOKEN_COOKIE_NAME", "todo-refresh"),
+    "COOKIE_PATH": "/",
+    "COOKIE_DOMAIN": os.getenv("COOKIE_DOMAIN", "localhost"),
+    "COOKIE_SECURE": os.getenv("COOKIE_SECURE", "True").lower() == "true",
+    "COOKIE_HTTPONLY": os.getenv("COOKIE_HTTPONLY", "True").lower() == "true",
+    "COOKIE_SAMESITE": os.getenv("COOKIE_SAMESITE", "Strict"),
 }
