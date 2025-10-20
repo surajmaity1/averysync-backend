@@ -38,3 +38,8 @@ GOOGLE LogIn API:
 ```
 http://localhost:8000/v1/auth/google/login
 ```
+
+Users API: 
+```
+http://localhost:8000/v1/users
+```

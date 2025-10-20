@@ -27,6 +27,16 @@ class TokenInvalidError(BaseAuthException):
         super().__init__(msg)
 
 
+class TokenMissingError(BaseAuthException):
+    def __init__(self, msg: str = AuthErrorMessages.ACCESS_TOKEN_MISSING):
+        super().__init__(msg)
+
+
 class TokenExpiredError(BaseAuthException):
     def __init__(self, msg: str = AuthErrorMessages.TOKEN_EXPIRED):
+        super().__init__(msg)
+
+
+class RefreshTokenExpiredError(BaseAuthException):
+    def __init__(self, msg: str = AuthErrorMessages.REFRESH_TOKEN_EXPIRED):
         super().__init__(msg)

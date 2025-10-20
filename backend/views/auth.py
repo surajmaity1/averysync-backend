@@ -74,7 +74,6 @@ class GoogleCallbackView(APIView):
             
             return response
         except Exception as exception:
-            print(str(exception))
             return HttpResponseRedirect(f'{frontend_base_url}?error=auth_failed')
 
 

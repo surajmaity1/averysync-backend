@@ -26,11 +26,12 @@ class HealthView(APIView):
         overall_status = AppHealthStatus.UP
 
         response = {
-            'status': overall_status.name,
-            'components': {
-                'db': {
-                    'status': db_status
-                },
-            }
+            'application': {
+                'status': overall_status.name,
+            },
+            'database': {
+                'status': db_status,
+            },
         }
+        
         return Response(response, overall_status.http_status)

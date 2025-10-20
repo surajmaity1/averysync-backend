@@ -29,7 +29,6 @@ def generate_token(user_details: dict, token_type: str) -> str:
         raise TokenInvalidError(f'{token_type} token generation failed: {str(exception)}')
 
 
-
 def validate_token(token: str, token_type: str) -> dict:
     try:
         payload = jwt.decode(
@@ -38,7 +37,7 @@ def validate_token(token: str, token_type: str) -> dict:
             algorithms=settings.JWT_CONFIG.get('ALGORITHM'),
         )
         
-        if payload.get('token_type') != token_type:
+        if payload.get('token_type') != token_type.lower():
             raise TokenInvalidError(AuthErrorMessages.TOKEN_INVALID)
         
         return payload
@@ -58,4 +57,5 @@ def generate_token_pair(user_details: dict) -> dict:
     return {
         'access_token': access_token,
         'refresh_token': refresh_token,
+        'expires_in': settings.JWT_CONFIG.get('ACCESS_TOKEN_LIFETIME'),
     }

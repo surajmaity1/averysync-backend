@@ -32,3 +32,17 @@ class UserService:
             raise
         except Exception as exception:
             raise APIException(RepositoryError.USER_CREATE_UPDATE_FAILED.format(str(exception))) from exception
+
+
+    @classmethod
+    def get_user_by_id(cls, user_id: str) -> UserModel:
+        try:
+            user = UserRepository.get_by_id(user_id)
+            
+            if not user:
+                raise UserNotFoundException()
+            
+            return user
+        except Exception as exception:
+            raise APIException(RepositoryError.USER_NOT_FOUND.format(str(exception))) from exception
+
