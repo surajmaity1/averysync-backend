@@ -41,5 +41,10 @@ http://localhost:8000/v1/auth/google/login
 
 Users API: 
 ```
-http://localhost:8000/v1/users
+http://localhost:8000/v1/users?profile=true
+```
+
+Posts API: 
+```
+http://localhost:8000/v1/posts
 ```
