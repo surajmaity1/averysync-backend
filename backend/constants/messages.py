@@ -25,6 +25,7 @@ class RepositoryError:
     USER_CREATE_UPDATE_FAILED = 'User create/update failed: {0}'
     USER_NOT_FOUND = 'User not found: {0}'
     POST_CREATION_FAILED = 'Failed to create post: {0}'
+    POST_FETCH_FAILED = 'Failed to fetch post: {0}'
 
 
 class AuthErrorMessages:

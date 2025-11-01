@@ -55,3 +55,28 @@ class PostView(APIView):
 
         error_response = ApiErrorResponse(statusCode=400, message=ApiErrors.VALIDATION_ERROR, errors=formatted_errors)
         return Response(data=error_response.model_dump(mode='json'), status=status.HTTP_400_BAD_REQUEST)
+
+    
+    def get(self, request: Request):
+        try:
+            response = PostService.get_posts()
+            
+            if response.errors:
+                if response.errors.get('code') == '400':
+                    return Response(data=response.model_dump(mode='json'), status=status.HTTP_400_BAD_REQUEST)
+                if response.errors.get('code') == '500':
+                    return Response(data=response.model_dump(mode='json'), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            return Response(data=response.model_dump(mode='json'), status=status.HTTP_200_OK)
+        except Exception as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                message=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
+                        description=(str(exception) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
+                    )
+                ]
+            )
+            return Response(data=api_error_response.model_dump(mode='json'), status=status.HTTP_500_INTERNAL_SERVER_ERROR)

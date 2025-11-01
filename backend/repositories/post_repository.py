@@ -2,6 +2,7 @@ from backend.constants.messages import RepositoryError
 from backend.models.post import PostModel
 from django.db import transaction
 import logging
+from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -26,3 +27,14 @@ class PostRepository:
         except Exception as exception:
             logger.error(f'Failed to create post: {str(exception)}')
             raise ValueError(RepositoryError.POST_CREATION_FAILED.format(str(exception)))
+
+
+    @classmethod
+    @transaction.atomic
+    def get_posts(cls) -> List[PostModel]:
+        try:
+            posts = PostModel.objects.filter(is_deleted=False).order_by('-created_at')
+            return posts
+        except Exception as exception:
+            logger.error(f'Failed to fetch all post: {str(exception)}')
+            raise ValueError(RepositoryError.POST_FETCH_FAILED.format(str(exception)))

@@ -6,6 +6,8 @@ from backend.repositories.post_repository import PostRepository
 from backend.dto.responses.error_response import ApiErrorResponse, ApiErrorDetail, ApiErrorSource
 from backend.exceptions.auth_exceptions import ApiErrors
 from django.conf import settings
+from backend.dto.responses.get_posts_response import GetPostsResponse
+from django.core.exceptions import ValidationError
 
 
 class PostService:
@@ -69,4 +71,34 @@ class PostService:
                         )
                     ]
                 )
+            )
+
+
+    @classmethod
+    def get_posts(cls) -> GetPostsResponse:
+        try:
+            posts = PostRepository.get_posts()
+            
+            if not posts:
+                return GetPostsResponse(posts=[], links=None)
+            
+            posts_dto = [cls._prepare_post_dto(post) for post in posts]
+            return GetPostsResponse(posts=posts_dto)
+        except ValidationError as e:
+            return GetPostsResponse(
+                posts=[],
+                links=None,
+                errors={
+                    'code': '400',
+                    'message': str(e) if settings.DEBUG else ApiErrors.VALIDATION_ERROR
+                }
+            )
+        except Exception as e:
+            return GetPostsResponse(
+                posts=[],
+                links=None,
+                errors={
+                    'code': '500',
+                    'message': str(e) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR
+                }
             )
