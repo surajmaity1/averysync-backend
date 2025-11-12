@@ -2,7 +2,7 @@ from django.urls import path
 from backend.views.auth import GoogleLogInView, GoogleCallbackView, LogOutView
 from backend.views.health import HealthView
 from backend.views.user import UsersView
-from backend.views.post import PostView
+from backend.views.post import PostView , PostDetailView
 
 
 urlpatterns = [
@@ -12,4 +12,5 @@ urlpatterns = [
     path('auth/logout', LogOutView.as_view(), name='logout'),
     path('users', UsersView.as_view(), name='users'),
     path('posts', PostView.as_view(), name='posts'),
+    path('posts/<str:post_id>', PostDetailView.as_view(), name='post_detail'),
 ]

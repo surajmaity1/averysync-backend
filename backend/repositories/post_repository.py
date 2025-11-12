@@ -38,3 +38,14 @@ class PostRepository:
         except Exception as exception:
             logger.error(f'Failed to fetch all post: {str(exception)}')
             raise ValueError(RepositoryError.POST_FETCH_FAILED.format(str(exception)))
+
+
+    @classmethod
+    @transaction.atomic
+    def get_by_id(cls, post_id: str) -> PostModel | None:
+        try:
+            post = PostModel.objects.get(id=post_id)
+            return post
+        except Exception as exception:
+            logger.error(f'Failed to fetch post: {str(exception)}')
+            raise ValueError(RepositoryError.POST_FETCH_FAILED.format(str(exception)))

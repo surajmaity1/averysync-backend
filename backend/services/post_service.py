@@ -8,6 +8,7 @@ from backend.exceptions.auth_exceptions import ApiErrors
 from django.conf import settings
 from backend.dto.responses.get_posts_response import GetPostsResponse
 from django.core.exceptions import ValidationError
+from backend.exceptions.post_exception import PostNotFoundException
 
 
 class PostService:
@@ -102,3 +103,16 @@ class PostService:
                     'message': str(e) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR
                 }
             )
+
+    
+    @classmethod
+    def get_post_by_id(cls, post_id:str) -> PostDTO:
+        try:
+            post_model = PostRepository.get_by_id(post_id=post_id)
+            
+            if not post_model:
+                raise PostNotFoundException(post_id=post_id)
+            
+            return cls._prepare_post_dto(post_model=post_model)
+        except Exception as exception:
+            raise ValueError(f'Post with id {post_id} not found: {str(exception)}')

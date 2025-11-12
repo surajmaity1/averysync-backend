@@ -10,6 +10,9 @@ from backend.serializers.create_post_serializer import CreatePostSerializer
 from backend.services.post_service import PostService
 from rest_framework import status
 from django.conf import settings
+from backend.exceptions.post_exception import PostNotFoundException
+from backend.dto.responses.get_post_by_id_response import GetPostByIdResponse
+from backend.utils.uuid_validation import validate_uuid
 
 
 class PostView(APIView):
@@ -80,3 +83,46 @@ class PostView(APIView):
                 ]
             )
             return Response(data=api_error_response.model_dump(mode='json'), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PostDetailView(APIView):
+    def get(self, request: Request, post_id: str):
+        try:
+            validate_post_id = validate_uuid(uuid_string=post_id)
+            
+            if not validate_post_id:
+                raise ValueError(f'post not found {post_id}')
+            
+            post_dto = PostService.get_post_by_id(post_id)
+            response_data = GetPostByIdResponse(data=post_dto)
+            return Response(data=response_data.model_dump(mode='json'), status=status.HTTP_200_OK)
+        except (PostNotFoundException, ValueError) as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_404_NOT_FOUND,
+                message=ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id),
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id),
+                        description=(str(exception) if settings.DEBUG else ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id)),
+                    )
+                ]
+            )
+            return Response(
+                data=api_error_response.model_dump(mode='json', exclude_none=True),
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_404_NOT_FOUND,
+                message=ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id),
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
+                        description=(str(exception) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
+                    )
+                ]
+            )
+            return Response(
+                data=api_error_response.model_dump(mode='json', exclude_none=True),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

@@ -14,7 +14,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-o8kw8vwdyoa+1xh%ca0ovm94j=
 DEBUG = True
 
 # ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'https://backend-api-django.onrender.com', 'backend-api-django.onrender.com']
+# ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['https://services.averysync.com', 'services.averysync.com', 'https://averysync.com', 'averysync.com', 'https://www.averysync.com', 'www.averysync.com']
 
 LOGGING = {
     "version": 1,
@@ -55,7 +56,8 @@ MIDDLEWARE = [
     'backend.middlewares.jwt_auth.JWTAuthenticationMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = ['http://127.0.0.1', 'http://localhost:3000', 'http://localhost', 'https://backend-api-django.onrender.com', 'https://averysync.vercel.app']
+# CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
+CORS_ALLOWED_ORIGINS = ['https://services.averysync.com', 'https://averysync.com', 'https://www.averysync.com', 'www.averysync.com', 'services.averysync.com', 'averysync.com']
 
 CORS_ALLOW_CREDENTIALS = True
 

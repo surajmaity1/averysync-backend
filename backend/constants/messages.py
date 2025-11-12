@@ -10,6 +10,8 @@ class ApiErrors:
     AUTHENTICATION_FAILED = 'Authentication failed: {0}'
     VALIDATION_ERROR = 'Validation error'
     REPOSITORY_ERROR = 'Repository error'
+    POST_NOT_FOUND_WITH_ID = 'Post not found with id {0}'
+    POST_NOT_FOUND = 'Post not found'
     
 
 
