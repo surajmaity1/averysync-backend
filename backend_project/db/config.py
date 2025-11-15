@@ -53,6 +53,7 @@ class DBManager:
             
         return connection
 
+
     def get_db(self):
         if self._db is None:
             self._db = self._get_db_client()[settings.DB_NAME]

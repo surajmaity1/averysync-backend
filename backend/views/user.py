@@ -54,3 +54,43 @@ class UsersView(APIView):
                 data=api_error_response.model_dump(mode='json'),
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class UserDetailView(APIView):
+    def get(self, request: Request, user_id: str):
+        try:            
+            user_details = UserService.get_user_by_id(user_id)
+            if not user_details:
+                return Response(
+                    {
+                        'statusCode': status.HTTP_404_NOT_FOUND,
+                        'message': ApiErrors.USER_NOT_FOUND,
+                        'data': None,
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            response = {
+                'name': user_details.name,
+                'image': user_details.image,
+            }
+            
+            return Response({
+                'data': response
+            },status=status.HTTP_200_OK)
+            
+        except Exception as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                message=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
+                        description=ApiErrors.USER_DETAILS_FETCH_FAILED.format(str(exception))
+                    )
+                ]
+            )
+            return Response(
+                data=api_error_response.model_dump(mode='json'),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
