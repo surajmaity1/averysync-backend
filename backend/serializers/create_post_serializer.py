@@ -9,7 +9,7 @@ class CreatePostSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True,
                                         help_text='Description of the post')
     type = serializers.ChoiceField(required=False, default=PostType.POST.name, choices=[type.name for type in PostType],
-                                 help_text='Type of the post (POST, SPACE)')
+                                   help_text='Type of the post (POST, SPACE)')
     isRecorded = serializers.BooleanField(required=False, default=None, allow_null=True, help_text='Type of the Space')
 
     def validate_title(self, value):

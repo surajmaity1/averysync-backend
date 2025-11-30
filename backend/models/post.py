@@ -23,8 +23,8 @@ class PostModel(models.Model):
             models.Index(fields=['type']),
         ]
 
-    def save(self, *args, **kwards):
+    def save(self, *args, **kwargs):
         if not self.pk:
             self.created_at = timezone.now()
         self.updated_at = timezone.now()
-        super().save(*args, **kwards)
+        super().save(*args, **kwargs)

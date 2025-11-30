@@ -1,3 +1,8 @@
+Create schema:
+```sql
+create schema backend_db;
+```
+
 User table:
 ```sql
 CREATE TABLE "users" (
@@ -36,4 +41,12 @@ CREATE TABLE backend_db.posts (
 -- Create indexes in the same schema
 CREATE INDEX posts_created_at_idx ON backend_db.posts (created_at);
 CREATE INDEX posts_type_idx ON backend_db.posts (type);
+```
+
+Reminders table:
+```sql
+
+```
+
+```sql
 ```

@@ -153,9 +153,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Postgres Configuration
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
-POSTGRES_USER = os.getenv('POSTGRES_USER', 'backend_user')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'backend_password')
-POSTGRES_DB = os.getenv('POSTGRES_DB', 'backend_postgres')
+POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', '123456')
+POSTGRES_DB = os.getenv('POSTGRES_DB', 'backend_db')
 ENGINE = 'django.db.backends.postgresql'
 
 DATABASES = {

@@ -12,7 +12,8 @@ class ApiErrors:
     REPOSITORY_ERROR = 'Repository error'
     POST_NOT_FOUND_WITH_ID = 'Post not found with id {0}'
     POST_NOT_FOUND = 'Post not found'
-    
+    REMINDER_NOT_FOUND = 'Reminder not found'
+    REMINDER_NOT_FOUND_WITH_ID = 'Reminder not found with id {0}'
 
 
 class ValidationErrors:
@@ -21,6 +22,9 @@ class ValidationErrors:
     NAME_REQUIRED = 'Name Id required'
     IMAGE_REQUIRED = 'Image Id required'
     TITLE_REQUIRED = 'Title required'
+    POST_ID_REQUIRED = 'Post id required'
+    REMINDER_REQUIRED = 'Reminder required'
+    VALID_POST_ID_FORMAT_REQUIRED = 'Valid Post id required'
 
 
 class RepositoryError:
@@ -28,6 +32,8 @@ class RepositoryError:
     USER_NOT_FOUND = 'User not found: {0}'
     POST_CREATION_FAILED = 'Failed to create post: {0}'
     POST_FETCH_FAILED = 'Failed to fetch post: {0}'
+    REMINDER_CREATE_UPDATE_FAILED = 'Failed to create reminder: {0}'
+    REMINDER_FETCH_FAILED = 'Failed to fetch reminder: {0}'
 
 
 class AuthErrorMessages:
