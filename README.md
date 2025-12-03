@@ -27,6 +27,7 @@ CREATE DATABASE backend_db
 show search_path
 set search_path to backend_db, public
 ALTER ROLE postgres_user_name set SEARCH_PATH = backend_db
+DROP DATABASE backend_db WITH (FORCE);
 ```
 
 APIs:
