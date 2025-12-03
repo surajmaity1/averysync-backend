@@ -63,7 +63,7 @@ class GoogleCallbackView(APIView):
             
             tokens = generate_token_pair(
                 {
-                    'user_id': str(user.user_id),
+                    'id': str(user.id),
                     'name': user.name,
                 }
             )

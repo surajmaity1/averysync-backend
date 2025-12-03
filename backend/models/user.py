@@ -1,8 +1,10 @@
 from django.db import models
 from django.utils import timezone
+import uuid
 
 
 class UserModel(models.Model):
+    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
     user_id = models.CharField(max_length=255, unique=True)
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255)

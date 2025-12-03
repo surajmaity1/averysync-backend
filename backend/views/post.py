@@ -145,9 +145,6 @@ class ReminderView(APIView):
                 raise ValueError(f'Space not found {space_id}')
             reminder_dto = ReminderService.get_reminder_by_space_id(space_id=space_id)
             response_data = GetReminderBySpaceIdResponse(data=reminder_dto)
-            print('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
-            print(response_data)
-            print('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
             return Response(
                 data=response_data.model_dump(mode='json'),
                 status=status.HTTP_200_OK

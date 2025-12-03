@@ -47,6 +47,6 @@ class UserRepository:
     @classmethod
     def get_by_id(cls, user_id: str) -> Optional[UserModel]:
         try:
-            return UserModel.objects.get(user_id=user_id)
+            return UserModel.objects.get(id=user_id)
         except Exception as exception:
             raise UserNotFoundException() from exception

@@ -14,8 +14,8 @@ def generate_token(user_details: dict, token_type: str) -> str:
             'iat': int(issued_at.timestamp()),
             'exp': int(expired.timestamp()),
             'token_type': f'{token_type.lower()}',
-            'sub': user_details['user_id'],
-            'user_id': user_details['user_id'],
+            'sub': user_details['id'],
+            'user_id': user_details['id'],
         }
         
         token = jwt.encode(
