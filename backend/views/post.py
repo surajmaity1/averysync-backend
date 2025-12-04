@@ -46,7 +46,7 @@ class PostView(APIView):
                         title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                         description=(str(exception) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
                     )
-                ]
+                ] if settings.ERROR_DETAILS else ApiErrors.INTERNAL_SERVER_ERROR
             )
             return Response(
                 data=api_error_response.model_dump(mode='json'),
@@ -84,7 +84,7 @@ class PostView(APIView):
                         title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                         description=(str(exception) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
                     )
-                ]
+                ] if settings.ERROR_DETAILS else ApiErrors.INTERNAL_SERVER_ERROR
             )
             return Response(data=api_error_response.model_dump(mode='json'),
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -111,7 +111,7 @@ class PostDetailView(APIView):
                         description=(
                             str(exception) if settings.DEBUG else ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id)),
                     )
-                ]
+                ] if settings.ERROR_DETAILS else ApiErrors.POST_NOT_FOUND
             )
             return Response(
                 data=api_error_response.model_dump(mode='json', exclude_none=True),
@@ -119,14 +119,14 @@ class PostDetailView(APIView):
             )
         except Exception as exception:
             api_error_response = ApiErrorResponse(
-                statusCode=status.HTTP_404_NOT_FOUND,
-                message=ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id),
+                statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                message=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                 errors=[
                     ApiErrorDetail(
                         title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                         description=(str(exception) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
                     )
-                ]
+                ] if settings.ERROR_DETAILS else ApiErrors.INTERNAL_SERVER_ERROR
             )
             return Response(
                 data=api_error_response.model_dump(mode='json', exclude_none=True),
@@ -159,7 +159,7 @@ class ReminderView(APIView):
                         description=(
                             str(exception) if settings.DEBUG else ApiErrors.REMINDER_NOT_FOUND_WITH_ID.format(space_id)),
                     )
-                ]
+                ] if settings.ERROR_DETAILS else ApiErrors.REMINDER_NOT_FOUND
             )
             return Response(
                 data=api_error_response.model_dump(mode='json', exclude_none=True),
@@ -167,14 +167,14 @@ class ReminderView(APIView):
             )
         except Exception as exception:
             api_error_response = ApiErrorResponse(
-                statusCode=status.HTTP_404_NOT_FOUND,
-                message=ApiErrors.REMINDER_NOT_FOUND_WITH_ID.format(space_id),
+                statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                message=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                 errors=[
                     ApiErrorDetail(
                         title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                         description=(str(exception) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
                     )
-                ]
+                ] if settings.ERROR_DETAILS else ApiErrors.INTERNAL_SERVER_ERROR
             )
             return Response(
                 data=api_error_response.model_dump(mode='json', exclude_none=True),
@@ -210,7 +210,7 @@ class ReminderView(APIView):
                         title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                         description=(str(exception) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
                     )
-                ]
+                ] if settings.ERROR_DETAILS else ApiErrors.INTERNAL_SERVER_ERROR
             )
             return Response(
                 data=api_error_response.model_dump(mode='json'),

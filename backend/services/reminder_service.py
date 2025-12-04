@@ -49,7 +49,7 @@ class ReminderService:
                             title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                             description=(str(e) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR)
                         )
-                    ]
+                    ] if settings.ERROR_DETAILS else ApiErrors.UNEXPECTED_ERROR_OCCURRED
                 )
             )
 

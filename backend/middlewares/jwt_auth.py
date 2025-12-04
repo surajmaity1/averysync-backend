@@ -25,13 +25,13 @@ class JWTAuthenticationMiddleware:
             else:
                 error_response = ApiErrorResponse(
                     statusCode=status.HTTP_401_UNAUTHORIZED,
-                    message=AuthErrorMessages.AUTHENTICATION_REQUIRED,
+                    message=AuthErrorMessages.UNAUTHENTICATED_REQUIRED,
                     errors=[
                         ApiErrorDetail(
                             title=ApiErrors.AUTHENTICATION_FAILED,
                             description=AuthErrorMessages.AUTHENTICATION_REQUIRED,
                         )
-                    ]
+                    ] if settings.ERROR_DETAILS else AuthErrorMessages.AUTHENTICATION_REQUIRED
                 )
                 
                 return JsonResponse(
@@ -49,7 +49,7 @@ class JWTAuthenticationMiddleware:
                         title=ApiErrors.AUTHENTICATION_FAILED,
                         description=AuthErrorMessages.AUTHENTICATION_REQUIRED,
                     )
-                ]
+                ] if settings.ERROR_DETAILS else AuthErrorMessages.AUTHENTICATION_FAILED
             )
             
             return JsonResponse(
@@ -67,7 +67,7 @@ class JWTAuthenticationMiddleware:
                             title=ApiErrors.AUTHENTICATION_FAILED,
                             description=str(exception),
                         )
-                    ]
+                    ] if settings.ERROR_DETAILS else AuthErrorMessages.AUTHENTICATION_FAILED
                 )
         return JsonResponse(
                     error_response.model_dump(mode='json', exclude_none=True),

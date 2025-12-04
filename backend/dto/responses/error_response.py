@@ -16,5 +16,5 @@ class ApiErrorDetail(BaseModel):
 class ApiErrorResponse(BaseModel):
     statusCode: int
     message: str
-    errors: list[ApiErrorDetail]
+    errors: list[ApiErrorDetail] | str
     authenticated: bool | None = None

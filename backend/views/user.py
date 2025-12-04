@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from backend.constants.messages import ApiErrors
 from backend.dto.responses.error_response import ApiErrorResponse, ApiErrorDetail
+from django.conf import settings
 
 
 class UsersView(APIView):
@@ -48,7 +49,7 @@ class UsersView(APIView):
                         title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                         description=ApiErrors.USER_DETAILS_FETCH_FAILED.format(str(exception))
                     )
-                ]
+                ] if settings.ERROR_DETAILS else ApiErrors.INTERNAL_SERVER_ERROR
             )
             return Response(
                 data=api_error_response.model_dump(mode='json'),
@@ -88,7 +89,7 @@ class UserDetailView(APIView):
                         title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                         description=ApiErrors.USER_DETAILS_FETCH_FAILED.format(str(exception))
                     )
-                ]
+                ] if settings.ERROR_DETAILS else ApiErrors.INTERNAL_SERVER_ERROR
             )
             return Response(
                 data=api_error_response.model_dump(mode='json'),

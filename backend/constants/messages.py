@@ -41,6 +41,7 @@ class AuthErrorMessages:
     TOKEN_EXPIRED = 'Token expired'
     REFRESH_TOKEN_EXPIRED = 'Refresh token expired, try login again'
     AUTHENTICATION_REQUIRED = 'Authentication required'
+    UNAUTHENTICATED_REQUIRED = 'Unauthenticated user'
     ACCESS_TOKEN_MISSING = 'Access token missing'
 
 
