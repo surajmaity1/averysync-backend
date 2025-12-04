@@ -8,5 +8,5 @@ class LinksData(BaseModel):
 
 
 class PaginatedResponse(BaseModel):
-    links: LinksData | None = None
-    errors: Optional[Dict[str, Any]] = None
+    # links: LinksData | None = None
+    errors: Optional[Dict[str, Any]] | None = None

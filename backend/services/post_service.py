@@ -81,27 +81,27 @@ class PostService:
             posts = PostRepository.get_posts()
             
             if not posts:
-                return GetPostsResponse(posts=[], links=None)
+                return GetPostsResponse(posts=[])
             
             posts_dto = [cls._prepare_post_dto(post) for post in posts]
             return GetPostsResponse(posts=posts_dto)
         except ValidationError as e:
             return GetPostsResponse(
                 posts=[],
-                links=None,
-                errors={
-                    'code': '400',
-                    'message': str(e) if settings.DEBUG else ApiErrors.VALIDATION_ERROR
-                }
+                # links=None,
+                # errors={
+                #     'code': '400',
+                #     'message': str(e) if settings.DEBUG else ApiErrors.VALIDATION_ERROR
+                # }
             )
         except Exception as e:
             return GetPostsResponse(
                 posts=[],
-                links=None,
-                errors={
-                    'code': '500',
-                    'message': str(e) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR
-                }
+                # links=None,
+                # errors={
+                #     'code': '500',
+                #     'message': str(e) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR
+                # }
             )
 
     
