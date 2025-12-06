@@ -22,7 +22,7 @@ class ReminderRepository:
                 post_id=model.post_id,
                 defaults=reminder_details_data
             )
-            
+
             if created:
                 logger.info(f'Reminder created with id: {created_or_updated_reminder.id}')
             else:
@@ -34,11 +34,10 @@ class ReminderRepository:
 
     @classmethod
     @transaction.atomic
-    def get_by_id(cls, space_id: str) -> ReminderModel | None:
+    def get_by_id(cls, space_id: str, user_id: str) -> ReminderModel | None:
         try:
-            reminder = ReminderModel.objects.get(post_id=space_id)
+            reminder = ReminderModel.objects.get(post_id=space_id, user_id=user_id)
             return reminder
         except Exception as exception:
             logger.error(f'Failed to fetch reminder: {str(exception)}')
             raise ValueError(RepositoryError.REMINDER_FETCH_FAILED.format(str(exception)))
-            

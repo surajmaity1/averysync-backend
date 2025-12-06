@@ -138,13 +138,18 @@ class ReminderView(APIView):
     def get(self, request: Request, space_id: uuid.UUID):
         try:
             validate_post_id = validate_uuid(uuid_string=str(space_id))
-            
-            # TODO: fetch space by space id to check space exist or not 
-            
+
             if not validate_post_id:
                 raise ValueError(f'Space not found {space_id}')
-            reminder_dto = ReminderService.get_reminder_by_space_id(space_id=space_id)
+
+            post_dto = PostService.get_post_by_id(post_id=str(space_id))
+
+            if not post_dto:
+                raise ValueError(f'Space not found {space_id}')
+
+            reminder_dto = ReminderService.get_reminder_by_space_id(space_id=str(space_id), user_id=request.user_id)
             response_data = GetReminderBySpaceIdResponse(data=reminder_dto)
+            
             return Response(
                 data=response_data.model_dump(mode='json'),
                 status=status.HTTP_200_OK
@@ -157,7 +162,8 @@ class ReminderView(APIView):
                     ApiErrorDetail(
                         title=ApiErrors.REMINDER_NOT_FOUND_WITH_ID.format(space_id),
                         description=(
-                            str(exception) if settings.DEBUG else ApiErrors.REMINDER_NOT_FOUND_WITH_ID.format(space_id)),
+                            str(exception) if settings.DEBUG else ApiErrors.REMINDER_NOT_FOUND_WITH_ID.format(
+                                space_id)),
                     )
                 ] if settings.ERROR_DETAILS else ApiErrors.REMINDER_NOT_FOUND
             )
@@ -180,7 +186,7 @@ class ReminderView(APIView):
                 data=api_error_response.model_dump(mode='json', exclude_none=True),
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
+
     def patch(self, request: Request, space_id: uuid.UUID):
         try:
             validate_post_id = validate_uuid(uuid_string=str(space_id))

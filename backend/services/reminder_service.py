@@ -36,7 +36,7 @@ class ReminderService:
                 created_by=dto.created_by,
             )
             created_or_updated_reminder = ReminderRepository.create_or_update(model=reminder_model)
-            
+
             return cls._prepare_post_dto(created_or_updated_reminder)
         except Exception as e:
             raise ValueError(
@@ -54,13 +54,13 @@ class ReminderService:
             )
 
     @classmethod
-    def get_reminder_by_space_id(cls, space_id: str) -> ReminderDTO:
+    def get_reminder_by_space_id(cls, space_id: str, user_id: str) -> ReminderDTO:
         try:
-            reminder_model = ReminderRepository.get_by_id(space_id=space_id)
-            
+            reminder_model = ReminderRepository.get_by_id(space_id=space_id, user_id=user_id)
+
             if not reminder_model:
                 raise ReminderNotFoundException(space_id=space_id)
-            
+
             return cls._prepare_post_dto(model=reminder_model)
         except Exception as exception:
             raise ValueError(f'Reminder with space id {space_id} not found: {str(exception)}')
