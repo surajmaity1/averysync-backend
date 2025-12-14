@@ -27,7 +27,7 @@ class UsersView(APIView):
                     )
                 
                 response = {
-                    # 'id': user_details.id,
+                    'id': user_details.id,
                     'name': user_details.name,
                     # 'email': user_details.email,
                     'image': user_details.image,
