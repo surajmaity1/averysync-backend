@@ -1,5 +1,6 @@
 from backend.constants.messages import ApiErrors
 
+
 class PostNotFoundException(Exception):
     def __init__(self, post_id: str | None = None, msg: str = ApiErrors.POST_NOT_FOUND_WITH_ID):
         if post_id:
@@ -7,3 +8,9 @@ class PostNotFoundException(Exception):
         else:
             self.msg = ApiErrors.POST_NOT_FOUND
         super().__init__(self.msg)
+
+
+class PostUpdateForbidden(Exception):
+    def __init__(self, post_id: str, message: str = ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED):
+        self.message = message.format(post_id)
+        super().__init__(self.message)

@@ -5,13 +5,13 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 from backend.constants.messages import ApiErrors
-from backend.dto.post_dto import CreatePostDTO
+from backend.dto.post_dto import CreatePostDTO, UpdatePostDTO
 from backend.dto.responses.create_post_response import CreatePostResponse
 from backend.dto.responses.error_response import ApiErrorDetail, ApiErrorSource, ApiErrorResponse
-from backend.serializers.create_post_serializer import CreatePostSerializer
+from backend.serializers.create_post_serializer import CreatePostSerializer, UpdatePostSerializer
 from backend.services.post_service import PostService
 from django.conf import settings
-from backend.exceptions.post_exception import PostNotFoundException
+from backend.exceptions.post_exception import PostNotFoundException, PostUpdateForbidden
 from backend.dto.responses.get_post_by_id_response import GetPostByIdResponse
 from backend.utils.uuid_validation import validate_uuid
 from backend.serializers.create_reminder_serializer import CreateReminderSerializer
@@ -133,6 +133,92 @@ class PostDetailView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+    def patch(self, request: Request, post_id: str):
+        try:
+            validate_post_id = validate_uuid(uuid_string=post_id)
+            
+            if not validate_post_id:
+                raise ValueError(f'post not found {post_id}')
+            
+            serializer = UpdatePostSerializer(data=request.data)
+            
+            if not serializer.is_valid():
+                return self._handle_validation_errors(errors=serializer.errors)
+            
+            updated_post = PostService.update_post_by_id(post_id=post_id, user_id=request.user_id, validated_data=serializer.validated_data)
+            
+            response_data = GetPostByIdResponse(data=updated_post)
+            return Response(data=response_data.model_dump(mode='json'), status=status.HTTP_200_OK)
+        except (PostNotFoundException, ValueError) as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_404_NOT_FOUND,
+                message=ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id),
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id),
+                        description=(
+                            str(exception) if settings.DEBUG else ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id)),
+                    )
+                ] if settings.ERROR_DETAILS else ApiErrors.POST_NOT_FOUND
+            )
+            return Response(
+                data=api_error_response.model_dump(mode='json', exclude_none=True),
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except PostUpdateForbidden as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_403_FORBIDDEN,
+                message=ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED.format(post_id),
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED.format(post_id),
+                        description=(str(exception) if settings.DEBUG else ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED),
+                    )
+                ] if settings.ERROR_DETAILS else ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED
+            )
+            return Response(
+                data=api_error_response.model_dump(mode='json', exclude_none=True),
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        except Exception as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                message=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
+                        description=(str(exception) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
+                    )
+                ] if settings.ERROR_DETAILS else ApiErrors.INTERNAL_SERVER_ERROR
+            )
+            return Response(
+                data=api_error_response.model_dump(mode='json', exclude_none=True),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _handle_validation_errors(self, errors):
+        formatted_errors = []
+
+        for fields, messages in errors.items():
+            formatted_errors.append(
+                ApiErrorDetail(
+                    source={ApiErrorSource.PARAMETER: fields},
+                    title=ApiErrors.VALIDATION_ERROR,
+                    description=str(messages)
+                )
+            )
+
+        error_response = ApiErrorResponse(
+            statusCode=400,
+            message=ApiErrors.VALIDATION_ERROR,
+            errors=formatted_errors
+        )
+        return Response(
+            data=error_response.model_dump(mode='json'),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
 
 class ReminderView(APIView):
     def get(self, request: Request, space_id: uuid.UUID):
@@ -149,7 +235,7 @@ class ReminderView(APIView):
 
             reminder_dto = ReminderService.get_reminder_by_space_id(space_id=str(space_id), user_id=request.user_id)
             response_data = GetReminderBySpaceIdResponse(data=reminder_dto)
-            
+
             return Response(
                 data=response_data.model_dump(mode='json'),
                 status=status.HTTP_200_OK

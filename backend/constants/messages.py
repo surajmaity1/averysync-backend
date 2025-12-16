@@ -14,6 +14,8 @@ class ApiErrors:
     POST_NOT_FOUND = 'Post not found'
     REMINDER_NOT_FOUND = 'Reminder not found'
     REMINDER_NOT_FOUND_WITH_ID = 'Reminder not found with id {0}'
+    POST_SPACE_UPDATE_NOT_ALLOWED = 'Post or Space update not allowed with id {0}'
+    POST_SPACE_UPDATE_FAILED = 'Post or Space update failed with id {0}'
 
 
 class ValidationErrors:
