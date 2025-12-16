@@ -4,8 +4,7 @@ from django.db import transaction
 import logging
 from typing import List, Optional
 
-from constants.post import SpaceStatus
-from exceptions.post_exception import PostNotFoundException
+from backend.constants.post import SpaceStatus
 
 logger = logging.getLogger(__name__)
 
