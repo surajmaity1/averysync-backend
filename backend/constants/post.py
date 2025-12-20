@@ -7,5 +7,7 @@ class PostType(Enum):
 
 
 class SpaceStatus(Enum):
-    OPEN = 1
-    CLOSED = 2
+    SCHEDULED = 1
+    LIVE = 2
+    ENDED = 3
+    CLOSED = 4

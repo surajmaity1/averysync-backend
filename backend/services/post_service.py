@@ -43,7 +43,7 @@ class PostService:
                 is_recorded=dto.isRecorded,
                 created_at=datetime.now(timezone.utc),
                 created_by=dto.created_by,
-                status=(PostModel.SpaceStatus.OPEN if dto.type.name == 'SPACE' else None),
+                status=(PostModel.SpaceStatus.SCHEDULED if dto.type.name == 'SPACE' else None),
             )
 
             created_post = PostRepository.create(post)
@@ -114,10 +114,10 @@ class PostService:
     def get_post_by_id(cls, post_id: str) -> PostDTO:
         try:
             post_model = PostRepository.get_by_id(post_id=post_id)
-            
+
             if not post_model:
                 raise PostNotFoundException(post_id=post_id)
-            
+
             return cls._prepare_post_dto(post_model=post_model)
         except Exception as exception:
             raise ValueError(f'Post with id {post_id} not found: {str(exception)}')
@@ -126,18 +126,18 @@ class PostService:
     def update_post_by_id(cls, post_id: str, user_id: str, validated_data: dict) -> PostDTO:
         try:
             post = PostService.get_post_by_id(post_id=post_id)
-            
+
             if not post:
                 raise ValueError(f'post not found {post_id}')
-            
+
             if not post.createdBy == user_id:
                 raise PostUpdateForbidden(post_id=post_id)
-            
+
             updated_post = PostRepository.update_by_id(post_id=post_id, update_data=validated_data)
-            
+
             if not updated_post:
                 raise ValueError(ApiErrors.POST_SPACE_UPDATE_FAILED.format(post_id))
-            
+
             return cls._prepare_post_dto(updated_post)
         except Exception as exception:
             raise ValueError(f'{ApiErrors.POST_SPACE_UPDATE_FAILED.format(post_id)} with exception: {str(exception)}')

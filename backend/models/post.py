@@ -6,8 +6,10 @@ from backend.constants.post import PostType
 
 class PostModel(models.Model):
     class SpaceStatus(models.IntegerChoices):
-        OPEN = 1
-        CLOSED = 2
+        SCHEDULED = 1
+        LIVE = 2
+        ENDED = 3
+        CLOSED = 4
 
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
     title = models.CharField(max_length=100)
