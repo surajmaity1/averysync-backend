@@ -13,7 +13,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-o8kw8vwdyoa+1xh%ca0ovm94j=
 
 DEBUG = True
 
-ERROR_DETAILS = os.getenv("ERROR_DETAILS", True)
+ERROR_DETAILS = os.getenv("ERROR_DETAILS", False)
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
 

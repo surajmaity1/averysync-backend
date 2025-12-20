@@ -8,7 +8,8 @@ from backend.constants.messages import ApiErrors
 from backend.dto.post_dto import CreatePostDTO, UpdatePostDTO
 from backend.dto.responses.create_post_response import CreatePostResponse
 from backend.dto.responses.error_response import ApiErrorDetail, ApiErrorSource, ApiErrorResponse
-from backend.serializers.create_post_serializer import CreatePostSerializer, UpdatePostSerializer
+from backend.serializers.create_post_serializer import CreatePostSerializer
+from backend.serializers.update_post_serializer import UpdatePostSerializer
 from backend.services.post_service import PostService
 from django.conf import settings
 from backend.exceptions.post_exception import PostNotFoundException, PostUpdateForbidden
@@ -136,17 +137,18 @@ class PostDetailView(APIView):
     def patch(self, request: Request, post_id: str):
         try:
             validate_post_id = validate_uuid(uuid_string=post_id)
-            
+
             if not validate_post_id:
                 raise ValueError(f'post not found {post_id}')
-            
+
             serializer = UpdatePostSerializer(data=request.data)
-            
+
             if not serializer.is_valid():
                 return self._handle_validation_errors(errors=serializer.errors)
-            
-            updated_post = PostService.update_post_by_id(post_id=post_id, user_id=request.user_id, validated_data=serializer.validated_data)
-            
+
+            updated_post = PostService.update_post_by_id(post_id=post_id, user_id=request.user_id,
+                                                         validated_data=serializer.validated_data)
+
             response_data = GetPostByIdResponse(data=updated_post)
             return Response(data=response_data.model_dump(mode='json'), status=status.HTTP_200_OK)
         except (PostNotFoundException, ValueError) as exception:
@@ -214,10 +216,9 @@ class PostDetailView(APIView):
             errors=formatted_errors
         )
         return Response(
-            data=error_response.model_dump(mode='json'),
+            data=error_response.model_dump(mode='json', exclude_none=True),
             status=status.HTTP_400_BAD_REQUEST
         )
-
 
 
 class ReminderView(APIView):
@@ -318,4 +319,5 @@ class ReminderView(APIView):
                                description=str(messages)))
 
         error_response = ApiErrorResponse(statusCode=400, message=ApiErrors.VALIDATION_ERROR, errors=formatted_errors)
-        return Response(data=error_response.model_dump(mode='json'), status=status.HTTP_400_BAD_REQUEST)
+        return Response(data=error_response.model_dump(mode='json', exclude_none=True),
+                        status=status.HTTP_400_BAD_REQUEST)
