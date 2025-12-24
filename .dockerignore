@@ -1,0 +1,14 @@
+**/.git
+**/.github
+**/.gitignore
+**/*.md
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/venv
+**/.env
+**/db.sqlite3
+**/.dockerignore
+**/docker-compose*
+**/compose.y*ml
+**/Dockerfile*
