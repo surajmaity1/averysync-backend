@@ -1,5 +1,9 @@
-# Use an official Python runtime as a parent image
-FROM python:3.12.0
+# Stage 1: Base build stage
+FROM python:3.13-slim AS builder
+
+RUN mkdir /app
+
+WORKDIR /app
 
 ENV ENV=production
 
@@ -7,29 +11,34 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DJANGO_SETTINGS_MODULE=backend_project.settings.${ENV}
 
+RUN pip install --upgrade pip
+
+COPY requirements.txt /app/
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: Production stage
+
+FROM python:3.13-slim
+
+COPY --from=builder /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+
+RUN useradd -m -r appuser && \
+   mkdir /app && \
+   chown -R appuser /app
+
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \    
-    && rm -rf /var/lib/apt/lists/*
+COPY --chown=appuser:appuser . .
 
-ARG UID=10001
+ENV ENV=production
 
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
-
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install -r requirements.txt
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    DJANGO_SETTINGS_MODULE=backend_project.settings.${ENV}
 
 USER appuser
-
-COPY . .
 
 EXPOSE 8000
 
