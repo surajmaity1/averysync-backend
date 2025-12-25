@@ -1,21 +1,12 @@
 # Stage 1: Base build stage
 FROM python:3.13-slim AS builder
 
-RUN mkdir /app
-
 WORKDIR /app
 
-ENV ENV=production
+COPY requirements.txt .
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    DJANGO_SETTINGS_MODULE=backend_project.settings.${ENV}
-
-RUN pip install --upgrade pip
-
-COPY requirements.txt /app/
-
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Production stage
 
@@ -30,13 +21,12 @@ RUN useradd -m -r appuser && \
 
 WORKDIR /app
 
-COPY --chown=appuser:appuser . .
-
-ENV ENV=production
-
-ENV PYTHONUNBUFFERED=1 \
+ENV ENV=production \
+    PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DJANGO_SETTINGS_MODULE=backend_project.settings.${ENV}
+
+COPY --chown=appuser:appuser . .
 
 USER appuser
 
