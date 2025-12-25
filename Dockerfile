@@ -23,16 +23,18 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 
-# TODO : Fix the cache problem
 # RUN --mount=type=cache,id=pip_cache,target=/root/.cache/pip \
 #     --mount=type=bind,source=requirements.txt,target=requirements.txt \
 
 COPY . .
 
+RUN chmod +x start.sh
+
 RUN python -m pip install -r requirements.txt
 
 USER appuser
 
+
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py makemigrations && python manage.py migrate --noinput && gunicorn backend_project.wsgi --bind 0.0.0.0:8000"]
+CMD ["./start.sh"]
