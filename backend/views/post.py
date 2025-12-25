@@ -32,6 +32,9 @@ class PostView(APIView):
 
             dto = CreatePostDTO(**serializer.validated_data, created_by=request.user_id)
             response: CreatePostResponse = PostService.create_post(dto)
+            
+            reminder_dto = CreateUpdateReminderDTO(space_id=response.data.id, isReminderSet=True, created_by=request.user_id)
+            ReminderService.create_or_update(reminder_dto)
 
             return Response(data=response.model_dump(mode='json'), status=status.HTTP_201_CREATED)
         except ValueError as exception:
