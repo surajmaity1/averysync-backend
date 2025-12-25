@@ -3,10 +3,10 @@ set -e
 
 echo "Running  migrations..."
 
-# python manage.py makemigrations
-python manage.py migrate --noinput
+echo "Running manage.py makemigrations"
 
-echo "Migrations success..."
+python manage.py makemigrations
 
-echo "Starting application..."
-gunicorn backend_project.wsgi --bind 0.0.0.0:8000
+echo "Running python manage.py migrate --noinput"
+
+

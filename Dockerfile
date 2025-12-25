@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.14-slim
+FROM python:3.12.0
 
 ENV ENV=production
 
@@ -10,6 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \    
     && rm -rf /var/lib/apt/lists/*
 
 ARG UID=10001
@@ -23,18 +24,13 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 
-# RUN --mount=type=cache,id=pip_cache,target=/root/.cache/pip \
-#     --mount=type=bind,source=requirements.txt,target=requirements.txt \
-
-COPY . .
-
-RUN chmod +x start.sh
-
-RUN python -m pip install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
 
 USER appuser
 
+COPY . .
 
 EXPOSE 8000
 
-CMD ["./start.sh"]
+CMD ["sh", "-c", "python manage.py makemigrations && python manage.py migrate --noinput && gunicorn backend_project.wsgi --bind 0.0.0.0:8000"]
