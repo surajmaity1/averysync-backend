@@ -8,7 +8,7 @@ from backend.exceptions.auth_exceptions import ApiErrors
 from django.conf import settings
 from backend.dto.responses.get_posts_response import GetPostsResponse
 from django.core.exceptions import ValidationError
-from backend.exceptions.post_exception import PostNotFoundException, PostUpdateForbidden
+from backend.exceptions.post_exception import PostNotFoundException, PostUpdateForbidden, PostAlreadyDeletedException
 from backend.constants.messages import ApiErrors
 
 
@@ -121,6 +121,26 @@ class PostService:
             return cls._prepare_post_dto(post_model=post_model)
         except Exception as exception:
             raise ValueError(f'Post with id {post_id} not found: {str(exception)}')
+
+    @classmethod
+    def delete_post_by_id(cls, post_id: str, user_id: str) -> bool:
+        post = PostRepository.get_by_id(post_id=post_id)
+
+        if not post:
+            raise PostNotFoundException(post_id=post_id)
+
+        if not post.created_by == user_id:
+            raise PostUpdateForbidden(post_id=post_id)
+
+        if post.is_deleted:
+            raise PostAlreadyDeletedException(post_id=post_id)
+
+        post_deleted = PostRepository.delete_by_id(post_id=post_id)
+
+        if not post_deleted:
+            return False
+
+        return True
 
     @classmethod
     def update_post_by_id(cls, post_id: str, user_id: str, validated_data: dict) -> PostDTO:

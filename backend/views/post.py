@@ -12,7 +12,7 @@ from backend.serializers.create_post_serializer import CreatePostSerializer
 from backend.serializers.update_post_serializer import UpdatePostSerializer
 from backend.services.post_service import PostService
 from django.conf import settings
-from backend.exceptions.post_exception import PostNotFoundException, PostUpdateForbidden
+from backend.exceptions.post_exception import PostNotFoundException, PostUpdateForbidden, PostAlreadyDeletedException
 from backend.dto.responses.get_post_by_id_response import GetPostByIdResponse
 from backend.utils.uuid_validation import validate_uuid
 from backend.serializers.create_reminder_serializer import CreateReminderSerializer
@@ -32,8 +32,9 @@ class PostView(APIView):
 
             dto = CreatePostDTO(**serializer.validated_data, created_by=request.user_id)
             response: CreatePostResponse = PostService.create_post(dto)
-            
-            reminder_dto = CreateUpdateReminderDTO(space_id=response.data.id, isReminderSet=True, created_by=request.user_id)
+
+            reminder_dto = CreateUpdateReminderDTO(space_id=response.data.id, isReminderSet=True,
+                                                   created_by=request.user_id)
             ReminderService.create_or_update(reminder_dto)
 
             return Response(data=response.model_dump(mode='json'), status=status.HTTP_201_CREATED)
@@ -184,6 +185,81 @@ class PostDetailView(APIView):
             return Response(
                 data=api_error_response.model_dump(mode='json', exclude_none=True),
                 status=status.HTTP_403_FORBIDDEN,
+            )
+        except Exception as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                message=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
+                        description=(str(exception) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
+                    )
+                ] if settings.ERROR_DETAILS else ApiErrors.INTERNAL_SERVER_ERROR
+            )
+            return Response(
+                data=api_error_response.model_dump(mode='json', exclude_none=True),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def delete(self, request: Request, post_id: str):
+        try:
+            validate_post_id = validate_uuid(uuid_string=post_id)
+
+            if not validate_post_id:
+                raise ValueError(f'Post or space not found with id: {post_id}')
+
+            post_deleted = PostService.delete_post_by_id(post_id=post_id, user_id=request.user_id)
+
+            if not post_deleted:
+                return Response(data=None, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response(data=None, status=status.HTTP_204_NO_CONTENT)
+        except (PostNotFoundException, ValueError) as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_404_NOT_FOUND,
+                message=ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id),
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id),
+                        description=(
+                            str(exception) if settings.DEBUG else ApiErrors.POST_NOT_FOUND_WITH_ID.format(post_id)),
+                    )
+                ] if settings.ERROR_DETAILS else ApiErrors.POST_NOT_FOUND
+            )
+            return Response(
+                data=api_error_response.model_dump(mode='json', exclude_none=True),
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except PostUpdateForbidden as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_403_FORBIDDEN,
+                message=ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED.format(post_id),
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED.format(post_id),
+                        description=(str(exception) if settings.DEBUG else ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED),
+                    )
+                ] if settings.ERROR_DETAILS else ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED
+            )
+            return Response(
+                data=api_error_response.model_dump(mode='json', exclude_none=True),
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        except PostAlreadyDeletedException as exception:
+            api_error_response = ApiErrorResponse(
+                statusCode=status.HTTP_400_BAD_REQUEST,
+                message=ApiErrors.POST_ALREADY_DELETED.format(post_id),
+                errors=[
+                    ApiErrorDetail(
+                        title=ApiErrors.POST_ALREADY_DELETED.format(post_id),
+                        description=(str(exception) if settings.DEBUG else ApiErrors.POST_ALREADY_DELETED),
+                    )
+                ] if settings.ERROR_DETAILS else ApiErrors.POST_ALREADY_DELETED
+            )
+            return Response(
+                data=api_error_response.model_dump(mode='json', exclude_none=True),
+                status=status.HTTP_400_BAD_REQUEST,
             )
         except Exception as exception:
             api_error_response = ApiErrorResponse(

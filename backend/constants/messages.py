@@ -16,6 +16,8 @@ class ApiErrors:
     REMINDER_NOT_FOUND_WITH_ID = 'Reminder not found with id {0}'
     POST_SPACE_UPDATE_NOT_ALLOWED = 'Post or Space update not allowed with id {0}'
     POST_SPACE_UPDATE_FAILED = 'Post or Space update failed with id {0}'
+    POST_SPACE_DELETE_FAILED = 'Post or Space update failed with id {0}'
+    POST_ALREADY_DELETED = 'Post or Space already deleted with id {0}'
 
 
 class ValidationErrors:
@@ -34,6 +36,7 @@ class RepositoryError:
     USER_NOT_FOUND = 'User not found: {0}'
     POST_CREATION_FAILED = 'Failed to create post: {0}'
     POST_FETCH_FAILED = 'Failed to fetch post: {0}'
+    POST_DELETE_FAILED = 'Failed to delete post or space with id: {0}'
     REMINDER_CREATE_UPDATE_FAILED = 'Failed to create reminder: {0}'
     REMINDER_FETCH_FAILED = 'Failed to fetch reminder: {0}'
 
