@@ -68,6 +68,12 @@ class GoogleCallbackView(APIView):
             )
 
             response = HttpResponseRedirect(frontend_base_url)
+            
+            # TODO: Optimize for mobile log in
+            if "averysync://" in frontend_base_url or "exp://" in frontend_base_url:
+                query_params = f"?access={tokens['access_token']}&refresh={tokens['refresh_token']}"
+                return HttpResponseRedirect(f"{frontend_base_url}{query_params}")
+            
             self._set_auth_cookies(response, tokens)
             request.session.pop('oauth_state', None)
 
