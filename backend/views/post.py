@@ -1,10 +1,15 @@
+import time
 import uuid
+from datetime import datetime, timezone
 
 from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
+from sqlalchemy import true
+
 from backend.constants.messages import ApiErrors
+from backend.constants.post import SpaceStatus, PostType
 from backend.dto.post_dto import CreatePostDTO, UpdatePostDTO
 from backend.dto.responses.create_post_response import CreatePostResponse
 from backend.dto.responses.error_response import ApiErrorDetail, ApiErrorSource, ApiErrorResponse
@@ -14,6 +19,7 @@ from backend.services.post_service import PostService
 from django.conf import settings
 from backend.exceptions.post_exception import PostNotFoundException, PostUpdateForbidden, PostAlreadyDeletedException
 from backend.dto.responses.get_post_by_id_response import GetPostByIdResponse
+from backend.utils.stream import Stream
 from backend.utils.uuid_validation import validate_uuid
 from backend.serializers.create_reminder_serializer import CreateReminderSerializer
 from backend.services.reminder_service import ReminderService
@@ -104,8 +110,21 @@ class PostDetailView(APIView):
                 raise ValueError(f'post not found {post_id}')
 
             post_dto = PostService.get_post_by_id(post_id)
-            response_data = GetPostByIdResponse(data=post_dto)
-            return Response(data=response_data.model_dump(mode='json'), status=status.HTTP_200_OK)
+            token = None
+            if post_dto.type == PostType.SPACE and post_dto.status == SpaceStatus.LIVE:
+                print('came 3')
+
+                payload = {
+                    "user_id": post_dto.createdBy,
+                    "username": post_dto.createdBy,
+                    "room_id": str(post_dto.id),
+                    "is_speaker": True,
+                    "iss": getattr(settings, 'WEBRTC_ISSUER'),
+                    "exp": time.time() + 1000 * 60 * 60
+                }
+                token = Stream.stream_voice_peer_to_peer(payload=payload)
+            response_data = GetPostByIdResponse(data=post_dto, token=token)
+            return Response(data=response_data.model_dump(mode='json', exclude_none=True), status=status.HTTP_200_OK)
         except (PostNotFoundException, ValueError) as exception:
             api_error_response = ApiErrorResponse(
                 statusCode=status.HTTP_404_NOT_FOUND,
@@ -152,8 +171,21 @@ class PostDetailView(APIView):
 
             updated_post = PostService.update_post_by_id(post_id=post_id, user_id=request.user_id,
                                                          validated_data=serializer.validated_data)
+            token = None
+            if updated_post.type == PostType.SPACE and updated_post.status == SpaceStatus.LIVE:
+                print('came 3')
 
-            response_data = GetPostByIdResponse(data=updated_post)
+                payload = {
+                    "user_id": updated_post.createdBy,
+                    "username": updated_post.createdBy,
+                    "room_id": str(updated_post.id),
+                    "is_speaker": True,
+                    "iss": getattr(settings, 'WEBRTC_ISSUER'),
+                    "exp": time.time() + 1000 * 60 * 60
+                }
+                token = Stream.stream_voice_peer_to_peer(payload=payload)
+            print('came 2')
+            response_data = GetPostByIdResponse(data=updated_post, token=token)
             return Response(data=response_data.model_dump(mode='json'), status=status.HTTP_200_OK)
         except (PostNotFoundException, ValueError) as exception:
             api_error_response = ApiErrorResponse(
