@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
-from sqlalchemy import true
 
 from backend.constants.messages import ApiErrors
 from backend.constants.post import SpaceStatus, PostType
@@ -110,19 +109,7 @@ class PostDetailView(APIView):
                 raise ValueError(f'post not found {post_id}')
 
             post_dto = PostService.get_post_by_id(post_id)
-            token = None
-            if post_dto.type == PostType.SPACE and post_dto.status == SpaceStatus.LIVE:
-                print('came 3')
-
-                payload = {
-                    "user_id": post_dto.createdBy,
-                    "username": post_dto.createdBy,
-                    "room_id": str(post_dto.id),
-                    "is_speaker": True,
-                    "iss": getattr(settings, 'WEBRTC_ISSUER'),
-                    "exp": time.time() + 1000 * 60 * 60
-                }
-                token = Stream.stream_voice_peer_to_peer(payload=payload)
+            token = self._get_stream_token(post_dto, request.user_id)
             response_data = GetPostByIdResponse(data=post_dto, token=token)
             return Response(data=response_data.model_dump(mode='json', exclude_none=True), status=status.HTTP_200_OK)
         except (PostNotFoundException, ValueError) as exception:
@@ -171,20 +158,7 @@ class PostDetailView(APIView):
 
             updated_post = PostService.update_post_by_id(post_id=post_id, user_id=request.user_id,
                                                          validated_data=serializer.validated_data)
-            token = None
-            if updated_post.type == PostType.SPACE and updated_post.status == SpaceStatus.LIVE:
-                print('came 3')
-
-                payload = {
-                    "user_id": updated_post.createdBy,
-                    "username": updated_post.createdBy,
-                    "room_id": str(updated_post.id),
-                    "is_speaker": True,
-                    "iss": getattr(settings, 'WEBRTC_ISSUER'),
-                    "exp": time.time() + 1000 * 60 * 60
-                }
-                token = Stream.stream_voice_peer_to_peer(payload=payload)
-            print('came 2')
+            token = self._get_stream_token(updated_post, request.user_id)
             response_data = GetPostByIdResponse(data=updated_post, token=token)
             return Response(data=response_data.model_dump(mode='json'), status=status.HTTP_200_OK)
         except (PostNotFoundException, ValueError) as exception:
@@ -330,6 +304,21 @@ class PostDetailView(APIView):
             data=error_response.model_dump(mode='json', exclude_none=True),
             status=status.HTTP_400_BAD_REQUEST
         )
+
+    def _get_stream_token(self, post_dto, user_id):
+        if post_dto.type == PostType.SPACE and post_dto.status == SpaceStatus.LIVE:
+            # Only the creator is a speaker by default
+            is_speaker = str(post_dto.createdBy) == str(user_id)
+            payload = {
+                "user_id": str(user_id),
+                "username": str(user_id),
+                "room_id": str(post_dto.id),
+                "is_speaker": is_speaker,
+                "iss": getattr(settings, 'WEBRTC_ISSUER'),
+                "exp": int(time.time()) + 3600  # 1 hour expiration
+            }
+            return Stream.stream_voice_peer_to_peer(payload=payload)
+        return None
 
 
 class ReminderView(APIView):
