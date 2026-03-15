@@ -197,3 +197,7 @@ COOKIE_SETTINGS = {
     "COOKIE_HTTPONLY": os.getenv("COOKIE_HTTPONLY", "True").lower() == "true",
     "COOKIE_SAMESITE": os.getenv("COOKIE_SAMESITE", "Strict"),
 }
+
+STREAM_API = os.getenv('STREAM_API', 'http://localhost:8999')
+STREAM_API_SECRET_KEY = os.getenv('STREAM_API_SECRET_KEY', '')
+WEBRTC_ISSUER = os.getenv('WEBRTC_ISSUER', '')
