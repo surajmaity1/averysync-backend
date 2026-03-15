@@ -18,7 +18,6 @@ class ApiErrors:
     POST_SPACE_UPDATE_FAILED = 'Post or Space update failed with id {0}'
     POST_SPACE_DELETE_FAILED = 'Post or Space update failed with id {0}'
     POST_ALREADY_DELETED = 'Post or Space already deleted with id {0}'
-    SPACE_NOT_FOUND = 'Space not found with id {0}'
 
 
 class ValidationErrors:
