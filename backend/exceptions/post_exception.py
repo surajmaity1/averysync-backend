@@ -14,3 +14,15 @@ class PostUpdateForbidden(Exception):
     def __init__(self, post_id: str, message: str = ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED):
         self.message = message.format(post_id)
         super().__init__(self.message)
+
+
+class PostAlreadyDeletedException(Exception):
+    def __init__(self, post_id: str, message: str = ApiErrors.POST_ALREADY_DELETED):
+        self.message = message.format(post_id)
+        super().__init__(self.message)
+
+
+class SpaceNotFoundException(Exception):
+    def __init__(self, space_id: str, message: str = ApiErrors.SPACE_NOT_FOUND):
+        self.message = message.format(space_id)
+        super().__init__(self.message)
