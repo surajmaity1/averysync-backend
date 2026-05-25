@@ -1,0 +1,517 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary)}
+.wrap{display:flex;height:calc(100vh - 40px);min-height:700px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.sidebar{width:220px;flex-shrink:0;border-right:0.5px solid var(--color-border-tertiary);overflow-y:auto;background:var(--color-background-secondary)}
+.sidebar-header{padding:14px 14px 10px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.sidebar-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.08em}
+.nav-section{padding:8px 0}
+.nav-label{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.08em;padding:6px 14px 3px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:12.5px;color:var(--color-text-secondary);border-left:2px solid transparent;transition:all .15s}
+.nav-item:hover{background:var(--color-background-primary);color:var(--color-text-primary)}
+.nav-item.active{background:var(--color-background-primary);color:var(--color-text-primary);border-left-color:#7F77DD}
+.nav-item .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.main{flex:1;overflow-y:auto;padding:0}
+.hero{padding:24px 28px 20px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.hero h1{font-size:20px;font-weight:500;margin-bottom:6px}
+.hero p{font-size:13px;color:var(--color-text-secondary);line-height:1.6;max-width:620px}
+.hero-stats{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+.hstat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;text-align:center;min-width:90px}
+.hstat-n{font-size:20px;font-weight:500;color:#7F77DD}
+.hstat-l{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.feature-panel{padding:24px 28px;display:none}
+.feature-panel.active{display:block}
+.fp-header{margin-bottom:20px}
+.fp-title{font-size:18px;font-weight:500;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.fp-desc{font-size:13px;color:var(--color-text-secondary);line-height:1.6;max-width:620px}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.badge{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:500}
+.b-hard{background:#FAECE7;color:#712B13}.b-med{background:#FAEEDA;color:#633806}.b-easy{background:#EAF3DE;color:#27500A}
+.b-rev{background:#E6F1FB;color:#0C447C}.b-rt{background:#EEEDFE;color:#3C3489}.b-eng{background:#FBEAF0;color:#72243E}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px}
+.card-label{font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.card-label i{font-size:13px}
+.card-body{font-size:12.5px;color:var(--color-text-secondary);line-height:1.6}
+.card-body strong{color:var(--color-text-primary);font-weight:500}
+.section-title{font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.07em;margin:20px 0 10px;display:flex;align-items:center;gap:6px}
+.section-title i{font-size:14px}
+.arch-box{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:14px 16px;margin-bottom:12px}
+.arch-layers{display:flex;gap:8px;flex-wrap:wrap}
+.arch-chip{font-size:11.5px;padding:4px 10px;border-radius:var(--border-radius-md);background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary)}
+.timeline{display:flex;gap:16px;margin-bottom:16px}
+.tl-item{flex:1;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px}
+.tl-tag{font-size:10px;font-weight:500;color:#534AB7;background:#EEEDFE;padding:2px 8px;border-radius:99px;display:inline-block;margin-bottom:6px}
+.tl-body{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.moat-bar{height:6px;background:var(--color-border-tertiary);border-radius:3px;margin-top:4px;overflow:hidden}
+.moat-fill{height:100%;border-radius:3px;background:#7F77DD}
+.overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:20px 28px}
+.ov-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 14px;cursor:pointer;transition:all .15s}
+.ov-card:hover{background:var(--color-background-primary);border-color:var(--color-border-secondary)}
+.ov-icon{font-size:20px;margin-bottom:6px}
+.ov-name{font-size:12.5px;font-weight:500;margin-bottom:3px}
+.ov-cat{font-size:11px;color:var(--color-text-secondary)}
+.ov-diff{font-size:10px;margin-top:6px;padding:2px 8px;border-radius:99px;display:inline-block}
+.sep{height:0.5px;background:var(--color-border-tertiary);margin:20px 0}
+</style>
+
+<h2 class="sr-only">[Generated by AI. It make mistake]. AI social platform feature architecture — 15 production-grade AI systems for a billion-dollar social platform</h2>
+
+<div class="wrap">
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title">AI Platform Blueprint</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="show('overview')" id="nav-overview">
+      <span class="dot" style="background:#7F77DD"></span> All features
+    </div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Recommendation</div>
+    <div class="nav-item" onclick="show('neuralFeed')" id="nav-neuralFeed"><span class="dot" style="background:#534AB7"></span> NeuralFeed</div>
+    <div class="nav-item" onclick="show('trendOracle')" id="nav-trendOracle"><span class="dot" style="background:#534AB7"></span> TrendOracle</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Live Audio AI</div>
+    <div class="nav-item" onclick="show('echoSpace')" id="nav-echoSpace"><span class="dot" style="background:#0F6E56"></span> EchoSpace AI</div>
+    <div class="nav-item" onclick="show('synthVoice')" id="nav-synthVoice"><span class="dot" style="background:#0F6E56"></span> SynthVoice Agents</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">AI Companions</div>
+    <div class="nav-item" onclick="show('mindMirror')" id="nav-mindMirror"><span class="dot" style="background:#D85A30"></span> MindMirror</div>
+    <div class="nav-item" onclick="show('cloneCreator')" id="nav-cloneCreator"><span class="dot" style="background:#D85A30"></span> CloneCreator</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Content & Creation</div>
+    <div class="nav-item" onclick="show('ghostWriter')" id="nav-ghostWriter"><span class="dot" style="background:#D4537E"></span> GhostWriter AI</div>
+    <div class="nav-item" onclick="show('debateOS')" id="nav-debateOS"><span class="dot" style="background:#D4537E"></span> DebateOS</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Safety & Trust</div>
+    <div class="nav-item" onclick="show('truthGuard')" id="nav-truthGuard"><span class="dot" style="background:#E24B4A"></span> TruthGuard</div>
+    <div class="nav-item" onclick="show('emotionLayer')" id="nav-emotionLayer"><span class="dot" style="background:#E24B4A"></span> EmotionLayer</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Community & Growth</div>
+    <div class="nav-item" onclick="show('communityPulse')" id="nav-communityPulse"><span class="dot" style="background:#185FA5"></span> CommunityPulse</div>
+    <div class="nav-item" onclick="show('socialGraphAI')" id="nav-socialGraphAI"><span class="dot" style="background:#185FA5"></span> SocialGraph AI</div>
+    <div class="nav-item" onclick="show('knowledgeWeave')" id="nav-knowledgeWeave"><span class="dot" style="background:#185FA5"></span> KnowledgeWeave</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Revenue & Ads</div>
+    <div class="nav-item" onclick="show('adBrain')" id="nav-adBrain"><span class="dot" style="background:#BA7517"></span> AdBrain Pro</div>
+    <div class="nav-item" onclick="show('creatorEconomy')" id="nav-creatorEconomy"><span class="dot" style="background:#BA7517"></span> CreatorEconomy AI</div>
+  </div>
+</div>
+
+<div class="main">
+
+<div id="panel-overview" class="feature-panel active">
+  <div class="hero">
+    <h1>AI-Native Social Platform — Architecture Blueprint</h1>
+    <p>15 production-grade AI systems designed to power a billion-dollar social platform. Each feature is architected for real-world deployment, with full stack specs, revenue models, and long-term moats.</p>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n">15</div><div class="hstat-l">AI systems</div></div>
+      <div class="hstat"><div class="hstat-n">6</div><div class="hstat-l">Revenue models</div></div>
+      <div class="hstat"><div class="hstat-n">$12B+</div><div class="hstat-l">TAM addressed</div></div>
+      <div class="hstat"><div class="hstat-n">8</div><div class="hstat-l">Moat categories</div></div>
+    </div>
+  </div>
+  <div class="overview-grid">
+    <div class="ov-card" onclick="show('neuralFeed')"><div class="ov-icon"><i class="ti ti-brain" aria-hidden="true"></i></div><div class="ov-name">NeuralFeed</div><div class="ov-cat">Recommendation engine</div><div class="ov-diff badge b-hard">High complexity</div></div>
+    <div class="ov-card" onclick="show('trendOracle')"><div class="ov-icon"><i class="ti ti-trending-up" aria-hidden="true"></i></div><div class="ov-name">TrendOracle</div><div class="ov-cat">Predictive trends</div><div class="ov-diff badge b-med">Medium</div></div>
+    <div class="ov-card" onclick="show('echoSpace')"><div class="ov-icon"><i class="ti ti-microphone" aria-hidden="true"></i></div><div class="ov-name">EchoSpace AI</div><div class="ov-cat">Live audio moderator</div><div class="ov-diff badge b-hard">High complexity</div></div>
+    <div class="ov-card" onclick="show('synthVoice')"><div class="ov-icon"><i class="ti ti-speakerphone" aria-hidden="true"></i></div><div class="ov-name">SynthVoice Agents</div><div class="ov-cat">AI voice agents</div><div class="ov-diff badge b-hard">High complexity</div></div>
+    <div class="ov-card" onclick="show('mindMirror')"><div class="ov-icon"><i class="ti ti-user-heart" aria-hidden="true"></i></div><div class="ov-name">MindMirror</div><div class="ov-cat">AI companion memory</div><div class="ov-diff badge b-med">Medium</div></div>
+    <div class="ov-card" onclick="show('cloneCreator')"><div class="ov-icon"><i class="ti ti-robot" aria-hidden="true"></i></div><div class="ov-name">CloneCreator</div><div class="ov-cat">AI avatar creators</div><div class="ov-diff badge b-hard">High complexity</div></div>
+    <div class="ov-card" onclick="show('ghostWriter')"><div class="ov-icon"><i class="ti ti-pencil" aria-hidden="true"></i></div><div class="ov-name">GhostWriter AI</div><div class="ov-cat">Content copilot</div><div class="ov-diff badge b-easy">MVP-first</div></div>
+    <div class="ov-card" onclick="show('debateOS')"><div class="ov-icon"><i class="ti ti-messages" aria-hidden="true"></i></div><div class="ov-name">DebateOS</div><div class="ov-cat">AI debate engine</div><div class="ov-diff badge b-med">Medium</div></div>
+    <div class="ov-card" onclick="show('truthGuard')"><div class="ov-icon"><i class="ti ti-shield-check" aria-hidden="true"></i></div><div class="ov-name">TruthGuard</div><div class="ov-cat">AI moderation</div><div class="ov-diff badge b-hard">High complexity</div></div>
+    <div class="ov-card" onclick="show('emotionLayer')"><div class="ov-icon"><i class="ti ti-mood-smile" aria-hidden="true"></i></div><div class="ov-name">EmotionLayer</div><div class="ov-cat">Emotional intelligence</div><div class="ov-diff badge b-med">Medium</div></div>
+    <div class="ov-card" onclick="show('communityPulse')"><div class="ov-icon"><i class="ti ti-users" aria-hidden="true"></i></div><div class="ov-name">CommunityPulse</div><div class="ov-cat">Community AI manager</div><div class="ov-diff badge b-med">Medium</div></div>
+    <div class="ov-card" onclick="show('socialGraphAI')"><div class="ov-icon"><i class="ti ti-network" aria-hidden="true"></i></div><div class="ov-name">SocialGraph AI</div><div class="ov-cat">Discovery & connections</div><div class="ov-diff badge b-med">Medium</div></div>
+    <div class="ov-card" onclick="show('knowledgeWeave')"><div class="ov-icon"><i class="ti ti-book" aria-hidden="true"></i></div><div class="ov-name">KnowledgeWeave</div><div class="ov-cat">Community intelligence</div><div class="ov-diff badge b-med">Medium</div></div>
+    <div class="ov-card" onclick="show('adBrain')"><div class="ov-icon"><i class="ti ti-ad" aria-hidden="true"></i></div><div class="ov-name">AdBrain Pro</div><div class="ov-cat">AI advertising</div><div class="ov-diff badge b-hard">High complexity</div></div>
+    <div class="ov-card" onclick="show('creatorEconomy')"><div class="ov-icon"><i class="ti ti-coin" aria-hidden="true"></i></div><div class="ov-name">CreatorEconomy AI</div><div class="ov-cat">Creator monetization</div><div class="ov-diff badge b-med">Medium</div></div>
+  </div>
+</div>
+
+<div id="panel-neuralFeed" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-brain" aria-hidden="true"></i> NeuralFeed — AI Recommendation Engine</div>
+    <div class="fp-desc">A multi-signal, multi-objective recommendation system that serves hyper-personalized content across text posts, audio spaces, and communities — balancing engagement, diversity, and creator fairness.</div>
+    <div class="badges"><span class="badge b-hard">High complexity</span><span class="badge b-rev">Core revenue driver</span><span class="badge b-rt">Real-time required</span><span class="badge b-eng">High engagement</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Users drown in irrelevant content. Cold-start for new users. Creators lose reach to algorithm randomness. No contextual awareness of time-of-day or mood.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">Invisible to user — manifests as a feed that feels "impossibly accurate." Explicit feedback via long-press reactions. Weekly "Why you saw this" transparency card.</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-code"></i> AI architecture</div>
+  <div class="arch-box">
+    <div class="arch-layers">
+      <span class="arch-chip">Two-tower retrieval model (ANN)</span><span class="arch-chip">GNN for social graph signals</span><span class="arch-chip">HNSW vector index (Pinecone/Weaviate)</span><span class="arch-chip">Multi-task ranking (MMOE)</span><span class="arch-chip">Contextual bandits for exploration</span><span class="arch-chip">Transformer-based sequence model</span><span class="arch-chip">Real-time feature store (Redis)</span><span class="arch-chip">Kafka event stream</span>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>Embeddings:</strong> text-embedding-3-large for post encoding. <strong>VectorDB:</strong> Pinecone or Weaviate for ANN lookup. <strong>RAG:</strong> Not primary — used for explanation layer ("why this post").</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Sub-100ms feed generation. Online learning via Kafka → Flink → feature store. User signals written back within 500ms. Serving SLA: p99 &lt;150ms.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">CPM ads injected at position 4, 10, 18. Creator subscription amplification. A/B test monetization surfaces. Estimated $8-15 CPM on engaged feed.</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-chart-line"></i> Scale & competitive advantage</div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-building"></i> Similar company systems</div><div class="card-body">TikTok For You (DNN + multi-task), Twitter/X Grok-enhanced feed, Meta EdgeRank/DLRM, YouTube Deep Neural Retrieval, Spotify DJ. All billion-scale deployments.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-flame"></i> Competitive moat</div><div class="card-body">Cross-modal signals (text + audio + social graph). Audio engagement = rare signal competitors lack. 90-day behavioral graph creates deep switching cost. Creator fairness layer builds supply-side loyalty.</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-git-branch"></i> MVP → Scale</div>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-tag">MVP (weeks 1–8)</div><div class="tl-body">Collaborative filtering on follows/likes. Simple content-based embeddings. Rule-based freshness boost. Batch retraining daily.</div></div>
+    <div class="tl-item"><div class="tl-tag">V2 (months 3–6)</div><div class="tl-body">Two-tower retrieval. Online learning via Kafka. Multi-objective ranking. A/B experimentation framework.</div></div>
+    <div class="tl-item"><div class="tl-tag">V3 (months 9–18)</div><div class="tl-body">GNN social graph layer. Cross-modal audio signals. Contextual bandits. Real-time personalization at edge.</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-robot"></i> AI agent workflows</div><div class="card-body">Autonomous content audit agents flag low-quality bursts. Drift detection agent triggers model retraining. Creator equity agent rebalances feed diversity. Anomaly agent catches engagement manipulation.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-lock"></i> Privacy & moderation</div><div class="card-body">On-device signal compression (no raw content to server). Differential privacy on training data. User-controlled feed dials (recency vs relevance). GDPR deletion within 30 days. Filter bubble audit.</div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px"><div class="card-label"><i class="ti ti-server"></i> Infrastructure requirements</div><div class="card-body"><strong>Retrieval:</strong> GPU cluster (A100s) for embedding generation. <strong>Serving:</strong> CPU-optimized inference (ONNX runtime). <strong>Storage:</strong> Pinecone (vectors) + Redis Cluster (features) + Kafka (events) + S3 (model artifacts). <strong>Scale:</strong> Kubernetes autoscaling. Cost at 10M DAU: ~$80K/month infra.</div></div>
+  <div class="card"><div class="card-label"><i class="ti ti-trophy"></i> Long-term moat</div><div class="card-body">Every interaction enriches the behavioral graph — a data flywheel that compounds over time. Audio engagement signals are proprietary. At 100M users, model quality becomes impossible to replicate without equivalent data history. Creator loyalty through equitable reach builds supply-side lock-in.</div></div>
+</div>
+
+<div id="panel-echoSpace" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-microphone" aria-hidden="true"></i> EchoSpace AI — Live Audio Space Moderator & Co-host</div>
+    <div class="fp-desc">An autonomous AI agent that joins live audio spaces as a co-host: moderating speech in real-time, generating live summaries, prompting discussion, blocking bad actors, and surfacing relevant knowledge — all without human moderation staff.</div>
+    <div class="badges"><span class="badge b-hard">High complexity</span><span class="badge b-rt">Real-time critical</span><span class="badge b-rev">Retention driver</span><span class="badge b-eng">Viral potential</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Live audio spaces have no scalable moderation. Hosts burn out managing discussions. Listeners join late with no context. Great conversations are ephemeral — no searchable archive.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">Host invites "Echo" as co-host. Echo listens, transcribes, adds a live summary sidebar. Can unmute itself to interject a fact, redirect conversation, or warn a speaker. Listeners see a live "Space Brief" card updated every 90 seconds.</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-code"></i> AI architecture</div>
+  <div class="arch-box">
+    <div class="arch-layers">
+      <span class="arch-chip">Whisper / Deepgram ASR (streaming)</span><span class="arch-chip">Speaker diarization (PyAnnote)</span><span class="arch-chip">Real-time toxicity classifier</span><span class="arch-chip">LLM summarization (GPT-4o / Claude)</span><span class="arch-chip">TTS synthesis (ElevenLabs / OpenAI TTS)</span><span class="arch-chip">WebRTC audio injection</span><span class="arch-chip">RAG on space topic knowledge</span><span class="arch-chip">Intent classifier (moderation triggers)</span>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>LLM:</strong> Claude 3.5 / GPT-4o for summarization and fact interjections. <strong>RAG:</strong> Space topic seeded into vector store at start. <strong>VectorDB:</strong> Pinecone with per-space namespace. Live transcript chunks indexed every 60s.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">ASR latency &lt;300ms. Toxicity detection &lt;200ms. Summarization every 90s (async). TTS response under 1.5s. WebRTC audio pipeline with &lt;50ms audio injection latency. Kafka for event streaming.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Premium Echo (advanced moderation) = $19/month creator tier. Space replay with AI chapters = paid feature. Enterprise API for branded audio shows. B2B licensing to podcasting platforms.</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-git-branch"></i> MVP → Scale</div>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-tag">MVP (weeks 1–6)</div><div class="tl-body">Live transcription + toxicity warning alerts to host. Auto-summary posted after space ends. No voice interjection yet.</div></div>
+    <div class="tl-item"><div class="tl-tag">V2 (months 3–5)</div><div class="tl-body">Live summary sidebar. Voice interjection (opt-in). Speaker topic tracking. Clip highlights auto-generated.</div></div>
+    <div class="tl-item"><div class="tl-tag">V3 (months 6–12)</div><div class="tl-body">Full debate facilitation. Real-time fact-check with citations. AI audience Q&A routing. Space knowledge graph built per session.</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-robot"></i> AI agent workflows</div><div class="card-body"><strong>Listener agent:</strong> continuous ASR + diarization. <strong>Sentinel agent:</strong> toxicity + harassment detection → mute action. <strong>Summarizer agent:</strong> rolling LLM summary every 90s. <strong>Prompter agent:</strong> suggests questions to host when conversation lulls. <strong>Archivist agent:</strong> chapters + transcript post-space.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-lock"></i> Privacy & moderation</div><div class="card-body">Audio never stored unless user opts in to recording. Transcripts encrypted per-space. Speaker consent required (join = consent). Moderation actions logged for appeals. GDPR: transcript deletion on request. Echo cannot reveal private DMs or cross-space data.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-trophy"></i> Long-term moat</div><div class="card-body">Audio intelligence is a blue ocean — no competitor has deep audio-native AI moderation at scale. Every hosted space trains better intent models. The space knowledge graph becomes a unique corpus. Creators become dependent on Echo as a trusted co-host, creating platform lock-in deeper than text-only moderation tools.</div></div>
+</div>
+
+<div id="panel-synthVoice" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-speakerphone" aria-hidden="true"></i> SynthVoice Agents — Persistent AI Voice Participants</div>
+    <div class="fp-desc">Always-on AI voice agents with unique personas, expertise, and memory that can join spaces, hold conversations, answer questions, debate, and even host their own recurring shows. Think AI radio hosts and expert panelists.</div>
+    <div class="badges"><span class="badge b-hard">High complexity</span><span class="badge b-rev">Subscription revenue</span><span class="badge b-eng">Viral potential</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Spaces die without interesting participants. Small creators can't afford expert guests. Off-hours spaces get zero engagement. There's no scalable way to ensure conversation quality 24/7.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">Users browse an "AI Voices" marketplace. Invite "Dr. Aria (AI economist)" to their space. Aria joins, introduces herself, listens, and responds naturally. Users can follow AI voices and get notified when they're "live."</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-code"></i> AI architecture</div>
+  <div class="arch-box">
+    <div class="arch-layers">
+      <span class="arch-chip">Voice clone / TTS (ElevenLabs / Cartesia)</span><span class="arch-chip">STT (Deepgram streaming)</span><span class="arch-chip">LLM with persona system prompt</span><span class="arch-chip">Long-term memory store (MemGPT / Zep)</span><span class="arch-chip">RAG on persona's expertise domain</span><span class="arch-chip">Turn-taking controller (VAD)</span><span class="arch-chip">Emotional tone modulator</span><span class="arch-chip">Conversation state machine</span>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>LLM:</strong> Claude 3.5 Sonnet with persona system prompt + memory injection. <strong>RAG:</strong> Expertise corpus per AI voice (Wikipedia, arXiv, news). <strong>VectorDB:</strong> Weaviate with per-persona namespace + conversation history.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Voice activity detection &lt;50ms. STT → LLM → TTS pipeline under 1.8s (target). Turn-taking model to avoid interruptions. Parallel audio streams for multi-agent spaces. Stateful session management per space.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">AI Voice marketplace ($5–$20/month per agent subscription). Pay-per-space invites ($0.50–$2). Branded AI voices for companies ($500+/month enterprise). Creator revenue share for custom-trained AI voices.</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-robot"></i> AI agent workflows</div><div class="card-body"><strong>Listening agent:</strong> VAD + STT, identifies when addressed. <strong>Reasoning agent:</strong> LLM with retrieved context formulates response. <strong>Memory agent:</strong> writes conversation highlights to persistent store. <strong>Persona agent:</strong> enforces tone, expertise boundaries, ethical guardrails. <strong>Scheduler agent:</strong> manages AI voice's "calendar" of hosted shows.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-lock"></i> Privacy & moderation</div><div class="card-body">AI voices clearly labeled as AI — no impersonation of real people. Persona guardrails prevent harmful political positions. User can mute/remove AI voice at any time. AI voice usage data not sold to third parties. Voice cloning of real people requires explicit consent + verification.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-trophy"></i> Long-term moat</div><div class="card-body">Each AI voice accumulates conversation history and memory — they literally "grow" over time. Network effects: the more spaces an AI voice attends, the better calibrated it becomes. A marketplace of 10,000+ unique AI voices with distinct personalities creates an impossible-to-replicate content supply. Similar to Character.ai but voice-native and live.</div></div>
+</div>
+
+<div id="panel-mindMirror" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-user-heart" aria-hidden="true"></i> MindMirror — AI Companion with Persistent Memory</div>
+    <div class="fp-desc">A deeply personalized AI companion that remembers everything about a user across sessions — their interests, relationships, opinions, moods, and goals — acting as a personal social intelligence layer and second brain.</div>
+    <div class="badges"><span class="badge b-med">Medium complexity</span><span class="badge b-rev">Subscription driver</span><span class="badge b-eng">Highest retention</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">AI assistants forget you. Social platforms don't understand you as a person. No tool helps you navigate complex social dynamics, craft your online presence, or reflect on your own thinking over time.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">Accessed via chat panel or voice. "Hey Mirror, what have I been thinking about lately?" "Draft a reply to this post in my style." "Who do I know that talks about AI?" "Remind me what I said about X last month."</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-code"></i> AI architecture</div>
+  <div class="arch-box">
+    <div class="arch-layers">
+      <span class="arch-chip">Long-term memory (MemGPT / Zep / custom)</span><span class="arch-chip">Episodic memory store</span><span class="arch-chip">Semantic memory graph (user knowledge)</span><span class="arch-chip">Style embedding (writing voice model)</span><span class="arch-chip">Emotion state tracker</span><span class="arch-chip">LLM (Claude / GPT-4o)</span><span class="arch-chip">RAG on user's post history</span><span class="arch-chip">Personal knowledge graph (Neo4j)</span>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>LLM:</strong> Claude 3.5 with injected memory context. <strong>RAG:</strong> User's post history, liked content, conversations indexed in personal namespace. <strong>VectorDB:</strong> Pinecone per-user namespace (isolated). <strong>Graph DB:</strong> Neo4j for relationship knowledge.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Memory write: async within 5s of each interaction. Memory retrieval: &lt;300ms per query. Daily digest generation: batch job at optimal time-of-day. Emotion signal processing: passive, low-latency background job.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Core: free (limited memory). Pro: $9.99/month (full memory, unlimited history). Team: $29/month (shared memory for communities). Data portability API (export your memory graph). No memory data ever used for ads.</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-robot"></i> AI agent workflows</div><div class="card-body"><strong>Observer agent:</strong> passively watches interactions, extracts memory fragments. <strong>Consolidation agent:</strong> nightly memory compression and knowledge graph update. <strong>Insight agent:</strong> weekly "your mind this week" summary. <strong>Ghost agent:</strong> drafts posts in user's voice on request. <strong>Social agent:</strong> surfaces "you'd like this person" recommendations.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-lock"></i> Privacy & moderation</div><div class="card-body">All memory isolated per user — zero cross-user inference. User can view, edit, and delete any memory fragment. Memory never used for ad targeting. On-device memory option for highest-privacy tier. Right-to-erasure: full memory wipe in &lt;24h. Memory is user's property, portable.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-trophy"></i> Long-term moat</div><div class="card-body">Deeply personal data creates the highest possible switching cost — you'd lose your digital memory. Network effects between memory and platform usage create compounding value. Similar to Notion AI + Character.ai + Rewind.ai combined, but native to social context. Competitor would need both the platform data AND the memory architecture to replicate.</div></div>
+</div>
+
+<div id="panel-ghostWriter" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-pencil" aria-hidden="true"></i> GhostWriter AI — Creator Content Copilot</div>
+    <div class="fp-desc">An AI writing partner embedded in the compose flow that helps creators ideate, draft, rewrite, thread-ify, and schedule content — learning and adapting to each creator's unique voice and audience over time.</div>
+    <div class="badges"><span class="badge b-easy">MVP-first</span><span class="badge b-rev">Creator subscription</span><span class="badge b-eng">Creator retention</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Creator burnout from posting pressure. Writer's block kills posting frequency. Most creators have ideas but can't articulate them well. No personalized writing assistance that knows their niche and tone.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">Inline suggestions in compose box (like GitHub Copilot). "Expand this into a thread." "Make it punchy." "Add a hook." "What should I post about AI today?" Tone selector: educational / funny / spicy. Calendar of suggested posting times.</div></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>LLM:</strong> GPT-4o / Claude fine-tuned on creator's past posts. <strong>RAG:</strong> trending topics + creator's content history. <strong>VectorDB:</strong> creator's post archive embedded for style retrieval. Trend signals from NeuralFeed pipeline.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Inline completion: &lt;500ms (streaming tokens). Thread generation: &lt;3s. Trend data refresh: hourly batch. Style model: updated weekly via fine-tuning or RAG. Scheduling optimization: daily batch job.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Free: 10 AI assists/day. Creator Pro: $12/month unlimited. Agency tier: $49/month multi-account. Content bundles marketplace (AI-generated content packs). Affiliate: trending topic monetization.</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-tag">MVP (weeks 1–4)</div><div class="tl-body">GPT-4o inline suggestions. Thread expander. Basic tone options. No personalization yet.</div></div>
+    <div class="tl-item"><div class="tl-tag">V2 (months 2–4)</div><div class="tl-body">Voice learning from post history. Trend-aware suggestions. Scheduled posting with AI timing optimization.</div></div>
+    <div class="tl-item"><div class="tl-tag">V3 (months 5–12)</div><div class="tl-body">Full persona fine-tuning. Multi-format (text + audio script). AI-generated content analytics. Creator style marketplace.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-trophy"></i> Long-term moat</div><div class="card-body">Creators who train GhostWriter on their style become deeply locked in — switching means losing their AI voice model. Similar to Jasper.ai + Buffer + Notion AI but social-native. Creator style models are proprietary assets. The writing data corpus (with consent) creates the best social content LLM in the world.</div></div>
+</div>
+
+<div id="panel-debateOS" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-messages" aria-hidden="true"></i> DebateOS — AI-Structured Discussion Engine</div>
+    <div class="fp-desc">An AI system that transforms chaotic comment threads into structured debates, assigns steelman arguments to both sides, fact-checks in real-time, scores reasoning quality, and surfaces the strongest perspectives — not just the loudest.</div>
+    <div class="badges"><span class="badge b-med">Medium complexity</span><span class="badge b-eng">High engagement</span><span class="badge b-rev">Premium feature</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Comment threads are mob dynamics — rage and agreement bias dominate. Good arguments are buried. Bad-faith actors poison discussions. No platform rewards intellectual quality over emotional volume.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">Creator enables "Debate Mode" on a post. Comments are auto-clustered by stance. AI generates a live "Best of Each Side" summary. Users earn "Reasoning Score." AI Devil's Advocate can post the steelman of the minority view. Top reasoners get featured.</div></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>LLM:</strong> Claude for argument quality scoring + steelmanning. <strong>RAG:</strong> Grounded fact-checking against news + Wikipedia. <strong>VectorDB:</strong> Comment embeddings clustered by semantic stance. <strong>Classifier:</strong> fallacy detection fine-tune.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Comment clustering: &lt;2s per batch (50 comments). Fact-check: &lt;3s per claim. Stance update: real-time as comments pour in. Debate summary refresh: every 2 minutes. Score update: async, eventual consistency.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Debate Mode = Pro feature ($7/month). Media organizations pay for embedded debate widgets. B2B: political campaigns, think tanks, universities. Premium badges for high "Reasoning Score." Sponsorship of debate threads by brands.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-trophy"></i> Long-term moat</div><div class="card-body">Reasoning score creates a unique social signal that attracts high-quality discourse participants. Kialo, Reddit, and Twitter all fail at this — none have the AI layer. Intellectual users (high LTV) will migrate to the platform that rewards good thinking. A "Reasoning Reputation" tied to your identity is a powerful sticky signal.</div></div>
+</div>
+
+<div id="panel-truthGuard" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-shield-check" aria-hidden="true"></i> TruthGuard — Multi-Layer AI Content Moderation</div>
+    <div class="fp-desc">A real-time, multi-modal AI moderation system combining fine-tuned classifiers, LLM reasoning, and human-in-the-loop escalation — covering text, audio, and behavioral signals to scale trust and safety without an army of moderators.</div>
+    <div class="badges"><span class="badge b-hard">High complexity</span><span class="badge b-rt">Real-time critical</span><span class="badge b-rev">Platform safety = retention</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Hate speech, harassment, and disinfo destroy platform trust. Manual moderation is too slow and expensive. Context-free classifiers produce false positives that anger good-faith users. Audio spaces are an unmoderated wild west.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">Invisible for good-faith users. Violating users see contextual warnings before posting. Appeals process with AI reasoning explanation. Community moderators get AI-assisted queues. Users can see moderation transparency reports.</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-code"></i> AI architecture</div>
+  <div class="arch-box">
+    <div class="arch-layers">
+      <span class="arch-chip">Multi-label toxicity classifier (fine-tuned)</span><span class="arch-chip">LLM contextual reasoning layer</span><span class="arch-chip">Behavioral anomaly detection</span><span class="arch-chip">Network graph analysis (coordinated inauthentic)</span><span class="arch-chip">Audio toxicity (speech-to-text → classify)</span><span class="arch-chip">Image/video NSFW classifier</span><span class="arch-chip">Disinfo claim verification (RAG)</span><span class="arch-chip">Human escalation queue with active learning</span>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>Classifier:</strong> Fine-tuned DeBERTa / RoBERTa for speed. <strong>LLM:</strong> Claude for ambiguous case reasoning + explanation generation. <strong>RAG:</strong> Known disinfo claim database. <strong>VectorDB:</strong> Near-duplicate detection for spam/astroturfing.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Pre-post scan: &lt;100ms (classifier). Post-post LLM review: &lt;1s async. Audio monitoring: streaming 300ms latency. Coordinated behavior detection: 5-minute rolling window. Human queue: SLA 4 hours for escalations.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">TrustGuard API licensed to other platforms ($0.001/content item). B2B: brand safety reporting for advertisers. Community+ plan includes advanced moderation tools. Regulatory compliance reports for enterprise customers.</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-robot"></i> AI agent workflows</div><div class="card-body"><strong>Scanner agent:</strong> real-time pre/post classifier. <strong>Context agent:</strong> LLM reasoning on flagged content with thread history. <strong>Network agent:</strong> graph analysis for coordinated behavior. <strong>Audit agent:</strong> samples moderation decisions for quality review. <strong>Policy agent:</strong> auto-drafts policy violation explanations for users.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-lock"></i> Privacy & moderation</div><div class="card-body">Moderation decisions logged with model version + confidence. All actions appealable with AI reasoning visible. No training on flagged content without review. Demographic bias audits quarterly. Independent trust & safety board reviews high-profile cases. CSAM: PhotoDNA hash-matching mandatory.</div></div>
+  </div>
+</div>
+
+<div id="panel-emotionLayer" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-mood-smile" aria-hidden="true"></i> EmotionLayer — AI Emotional Intelligence System</div>
+    <div class="fp-desc">An ambient AI layer that reads emotional signals in posts, spaces, and interactions to personalize tone of responses, detect mental health signals, surface wellness nudges, and create emotionally-aware content feeds that don't amplify anxiety.</div>
+    <div class="badges"><span class="badge b-med">Medium complexity</span><span class="badge b-eng">Retention & wellness</span><span class="badge b-rev">Brand partnership revenue</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Social platforms optimize for outrage because it drives engagement. Users feel worse after scrolling. Creators don't know the emotional impact of their content. Mental health crises go undetected until too late.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">"Mood dial" in feed settings (energizing ↔ calming). Daily emotional weather report. Content warnings auto-applied based on emotional intensity. "Breathing space" mode reduces stressful content. AI detects crisis signals and surfaces resources — never announced publicly.</div></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>Classifier:</strong> GoEmotions fine-tuned model for text emotion. <strong>LLM:</strong> Claude for nuanced emotional reasoning + crisis detection. <strong>Audio:</strong> Prosody analysis for voice sentiment. <strong>VectorDB:</strong> User emotional timeline stored for personal patterns.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Text emotion classification: &lt;50ms. Feed emotional scoring: inline with recommendation pipeline. Crisis signal: async, &lt;30s detection-to-action. Audio prosody: 500ms latency. Daily digest: batch overnight.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Wellness Pro tier ($6/month). Mental health brand sponsorships. B2B emotional analytics API (for brands to understand emotional response to campaigns). Partnerships with mental health platforms. Research licensing to academic institutions.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-lock"></i> Privacy & key consideration</div><div class="card-body"><strong>Highest sensitivity area.</strong> Emotion data must NEVER be used for ad targeting. Crisis detection data is siloed — no product access. All emotion profiles are user-only visible. Independent clinical advisory board required. Regular bias audits (emotion models are notoriously culturally biased). HIPAA-adjacent privacy standards applied voluntarily.</div></div>
+</div>
+
+<div id="panel-communityPulse" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-users" aria-hidden="true"></i> CommunityPulse — AI Community Intelligence Manager</div>
+    <div class="fp-desc">An AI system that monitors, manages, and grows communities automatically — detecting health signals, surfacing rising contributors, generating weekly community digests, auto-moderating off-topic content, and suggesting community rules based on what's actually happening.</div>
+    <div class="badges"><span class="badge b-med">Medium complexity</span><span class="badge b-eng">Community retention</span><span class="badge b-rev">Community Pro tier</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Community managers burn out. Toxic dynamics destroy valuable communities. Rising contributors go unrecognized. Community leaders have no data to understand what's working. Off-topic content dilutes signal.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">Community admin gets an AI dashboard: health score, engagement trends, top contributors, flagged drama. AI posts weekly highlight digest as a pinned post. Suggests new rules based on violations. Recognizes "Rising Star" contributors automatically.</div></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>LLM:</strong> Claude for digest generation + rule suggestion + health narrative. <strong>Embeddings:</strong> post topic clustering. <strong>VectorDB:</strong> per-community semantic index. <strong>Graph analytics:</strong> contributor influence network, health metrics.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Health score update: every 15 minutes. Digest generation: weekly batch (Sunday night). Rising contributor detection: daily. Drama detection: real-time escalation alert. Topic drift detection: hourly rolling window.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Free: basic health score. Community Pro: $19/month (full AI management). Enterprise community: $99/month (multi-community, white-label). Community analytics API for researchers. Sponsored community highlights.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-trophy"></i> Long-term moat</div><div class="card-body">Community health data is unique to the platform — no third party can replicate it. Admins who adopt AI management become dependent on it (as with Discord moderators). The more communities managed, the better the AI understands community dynamics, creating a proprietary sociology dataset. Unlike generic tools (Circle, Discord), this is natively integrated with the platform's content graph.</div></div>
+</div>
+
+<div id="panel-socialGraphAI" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-network" aria-hidden="true"></i> SocialGraph AI — Intelligent Social Discovery</div>
+    <div class="fp-desc">A multi-dimensional AI discovery engine that goes beyond "people you may know" — using semantic interest mapping, conversation compatibility scoring, and cross-community signal to connect users with their ideal intellectual and creative tribe.</div>
+    <div class="badges"><span class="badge b-med">Medium complexity</span><span class="badge b-eng">Viral growth engine</span><span class="badge b-rev">Network effects</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Existing social graphs are popularity-biased (famous people get all the follows). New users can't find their niche. Content creators struggle to reach the right audience. Cross-community discovery doesn't exist.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">"Find your tribe" onboarding wizard. Weekly "Someone who thinks like you" recommendation. Semantic follow suggestions ("People who talk about X"). Cross-space discovery: "This user you follow attended spaces about Y — here are similar spaces." Interest constellation map (visual).</div></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>Embeddings:</strong> User interest vector from post history. <strong>VectorDB:</strong> ANN search across user interest space. <strong>GNN:</strong> Graph neural net on follow/interaction graph. <strong>LLM:</strong> Compatibility explanation generation.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Interest vector update: daily. ANN search: &lt;100ms. Compatibility scoring: batch, top-100 per user daily. Onboarding cold-start: &lt;5s for initial recommendations. Mutual connection detection: real-time graph query.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Creator amplification paid tier (pay for discovery). Event promotion (spaces get discovery boost). B2B: talent discovery API for recruiters. Creator collaboration matching ($5/successful collab match). Interest-based ad targeting (privacy-safe).</div></div>
+  </div>
+</div>
+
+<div id="panel-knowledgeWeave" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-book" aria-hidden="true"></i> KnowledgeWeave — Community Intelligence Graph</div>
+    <div class="fp-desc">An AI system that extracts, links, and surfaces knowledge generated by community discussions — turning ephemeral conversations into a searchable, citable, evolving knowledge base owned collectively by the community.</div>
+    <div class="badges"><span class="badge b-med">Medium complexity</span><span class="badge b-eng">Deep engagement</span><span class="badge b-rev">Enterprise licensing</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Brilliant community insights are buried in thread hell and lost after 48 hours. The same questions get asked repeatedly. No community has a way to capture its own collective intelligence. Experts' knowledge evaporates when they leave.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">"Ask the community knowledge" search bar. AI surfaces the best 5 past discussions on any topic. Post marked as "Knowledge" by AI gets added to the community wiki. Expert posts auto-quoted in future related discussions. "This community knows a lot about X" discovery signal.</div></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>LLM:</strong> Claude for knowledge extraction + wiki synthesis. <strong>RAG:</strong> Community post archive as primary corpus. <strong>VectorDB:</strong> Weaviate per-community with knowledge graph overlay. <strong>KG:</strong> Neo4j for concept-entity linking.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Knowledge extraction: async within 5 minutes of post. Wiki update: daily batch synthesis. Search: &lt;500ms semantic query. Cross-post linking: async background job. Expert attribution: real-time on post creation.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Knowledge Pro: $15/month community tier. Enterprise knowledge export API. Academic research partnerships. B2B: company communities get internal knowledge base. SEO-indexed community knowledge drives organic traffic (Google traffic → ad revenue).</div></div>
+  </div>
+</div>
+
+<div id="panel-adBrain" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-ad" aria-hidden="true"></i> AdBrain Pro — Contextual AI Advertising System</div>
+    <div class="fp-desc">A privacy-first AI advertising engine that matches ads to content context and user intent signals (not surveillance data) — delivering higher engagement rates than cookie-based systems while respecting user privacy and building advertiser trust.</div>
+    <div class="badges"><span class="badge b-hard">High complexity</span><span class="badge b-rev">Primary revenue driver</span><span class="badge b-rt">Real-time bidding</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Cookie-based targeting is dying (iOS ATT, GDPR). Generic contextual ads underperform. Brands fear brand safety violations next to toxic content. Audio spaces have no ad monetization model. Small advertisers can't compete with large brands' data advantages.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">Users see relevant ads with clear "Why this ad" labels. Users can rate ad relevance. Opt-in preference center. Audio ads injected into space breaks (like Spotify). "Brand Spaces" — sponsored live audio events. Native creator-brand match recommendations.</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-code"></i> AI architecture</div>
+  <div class="arch-box">
+    <div class="arch-layers">
+      <span class="arch-chip">Contextual embedding (post → topic)</span><span class="arch-chip">Brand safety classifier</span><span class="arch-chip">Intent signal aggregator (privacy-safe)</span><span class="arch-chip">Real-time auction engine (RTB)</span><span class="arch-chip">Creative optimization (multi-armed bandit)</span><span class="arch-chip">Audio ad injection pipeline</span><span class="arch-chip">Conversion attribution (privacy sandbox)</span><span class="arch-chip">LLM ad copy generator</span>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>LLM:</strong> Auto-generate ad copy variants (A/B tested). <strong>Embeddings:</strong> Content context vectors for contextual matching. <strong>VectorDB:</strong> Ad creative embeddings matched to content. No user PII in vectors — cohort-level targeting only.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">RTB latency: &lt;50ms. Contextual scoring: &lt;20ms (pre-computed). Audio ad insertion: seamless at space break. Creative selection: &lt;100ms. Attribution reporting: batch, hourly. Budget pacing: real-time spend control.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Display CPM: $6–15. Audio CPM: $20–40 (premium). Branded spaces: $5K–$50K/event. Creator-brand partnerships brokered by AI: 20% platform fee. Self-serve ads for SMBs. Programmatic exchange integration.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-trophy"></i> Long-term moat</div><div class="card-body">Privacy-first contextual advertising is the future — not a compromise. Audio ad inventory is rare and premium (Spotify earns $40+ CPM). AI creative generation dramatically reduces advertiser cost-to-create. The audio context signal (what's being discussed in a space) is a unique, real-time ad signal no competitor has. Brand safety AI attracts premium advertisers who've abandoned Twitter/X.</div></div>
+</div>
+
+<div id="panel-creatorEconomy" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-coin" aria-hidden="true"></i> CreatorEconomy AI — Intelligent Monetization Engine</div>
+    <div class="fp-desc">An AI system that helps creators discover, optimize, and scale their revenue streams — from subscriptions to merchandise to brand deals — using performance prediction, pricing optimization, audience intelligence, and automated deal matching.</div>
+    <div class="badges"><span class="badge b-med">Medium complexity</span><span class="badge b-rev">Platform take-rate revenue</span><span class="badge b-eng">Creator retention</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">99% of creators don't know how to monetize. Pricing is guesswork. Brand deal discovery is opaque and biased toward mega-influencers. Small creators with highly engaged niches are undervalued. Revenue diversification is overwhelming.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">"Revenue Advisor" dashboard. AI suggests: "Your audience over-indexes on productivity software. Brand X wants to talk." Subscription price optimizer: "You're leaving $400/month on the table." One-click merchandise design from your most viral posts. Predicted earnings for next 90 days.</div></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>LLM:</strong> Claude for deal memo generation + pricing rationale + opportunity explanation. <strong>Embeddings:</strong> audience interest profiling + brand affinity matching. <strong>ML:</strong> revenue prediction model (GBDT on engagement features).</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Revenue dashboard: real-time. Opportunity alerts: push within 5 minutes. Price optimization: weekly batch recalculation. Audience report: daily. Brand match: async scoring, surfaced weekly. Payout processing: near-real-time with Stripe.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Platform takes 5–15% of creator revenue. Brand deal brokerage: 20% fee. Merchandise fulfillment: 30% margin. AI monetization advisor: $19/month premium. Fund: platform-backed creator advances (revenue share model).</div></div>
+  </div>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-tag">MVP</div><div class="tl-body">Subscription tiers, tips, simple analytics. Manual brand discovery.</div></div>
+    <div class="tl-item"><div class="tl-tag">V2</div><div class="tl-body">AI pricing optimizer. Brand match marketplace. Revenue forecasting.</div></div>
+    <div class="tl-item"><div class="tl-tag">V3</div><div class="tl-body">Full AI revenue advisor. Merchandise AI. Creator fund. Financial products.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-trophy"></i> Long-term moat</div><div class="card-body">Creator economic lock-in is the deepest form of platform stickiness — creators can't easily move their subscriber relationships, revenue history, and brand relationships to another platform. AI optimization creates genuine economic value (not just convenience) that is impossible to replicate without the same audience data. Monetization quality attracts the best creators, creating a content quality flywheel.</div></div>
+</div>
+
+<div id="panel-trendOracle" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-trending-up" aria-hidden="true"></i> TrendOracle — Predictive Trend Intelligence System</div>
+    <div class="fp-desc">An AI system that detects emerging trends 12–48 hours before they peak, giving creators a first-mover advantage, advertisers early brand activation opportunities, and the platform a viral growth engine that attracts media attention.</div>
+    <div class="badges"><span class="badge b-med">Medium complexity</span><span class="badge b-rev">Premium insight product</span><span class="badge b-eng">Creator growth</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Trending content is already overcrowded by the time it's visible. Creators react instead of leading. Advertisers miss the organic moment. The platform looks like it copies trends rather than creates them.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">"Trending in 24 hours" signal in creator dashboard. "Be the first on X" notification. Trend brief: what it is, why it's rising, content angle suggestions. Advertisers get "Trend Early Access" as a premium product. Weekly "What's about to blow up" newsletter.</div></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>Signal aggregation:</strong> platform data + web crawl + news + social APIs. <strong>LLM:</strong> Trend narrative generation + content angle suggestions. <strong>ML:</strong> Time series anomaly detection (Prophet + custom). <strong>VectorDB:</strong> semantic clustering of emerging topics.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">Signal ingestion: real-time Kafka stream. Anomaly detection: 15-minute rolling windows. Trend scoring: every 5 minutes. Early alert push: within 2 minutes of detection. Historical trend analysis: batch, daily.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">Creator Pro: $15/month (includes trend signals). Advertiser Trend Intelligence: $500+/month. Media/PR agencies: $2,000+/month API. Real-time trend data licensing to news organizations. Sponsored trend reports.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-trophy"></i> Long-term moat</div><div class="card-body">Proprietary trend detection using internal platform signals is impossible to replicate from outside. Early creator adoption of trends = better content = more engagement = more trend signal. A virtuous cycle that makes the platform a trend originator rather than a follower. Google Trends is backward-looking — TrendOracle is forward-looking, a fundamental category advantage.</div></div>
+</div>
+
+<div id="panel-cloneCreator" class="feature-panel">
+  <div class="fp-header">
+    <div class="fp-title"><i class="ti ti-robot" aria-hidden="true"></i> CloneCreator — AI-Powered Creator Avatars</div>
+    <div class="fp-desc">A system that lets creators build an AI version of themselves — trained on their content, voice, and style — that can answer fan DMs, participate in spaces when the creator is offline, generate content drafts, and power 24/7 engagement without burnout.</div>
+    <div class="badges"><span class="badge b-hard">High complexity</span><span class="badge b-rev">Premium creator tier</span><span class="badge b-eng">Engagement & scale</span></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><div class="card-label"><i class="ti ti-alert-circle"></i> Problem solved</div><div class="card-body">Creators can't reply to 10,000 DMs. Great creators produce 1–2 posts/day max. Audience expects 24/7 availability. Creator burnout is the #1 platform churn risk. Fans feel ignored by their favorite creators.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-user"></i> User interaction</div><div class="card-body">Creator trains their clone: "This is how I talk. Here are 100 of my best posts. Here's what I believe." Clone DMs fans with creator's tone. Creator reviews and approves clone responses (optional). Fans interact with "AI [Creator Name]" — clearly labeled. Creator sets boundaries ("never discuss politics").</div></div>
+  </div>
+  <div class="section-title"><i class="ti ti-code"></i> AI architecture</div>
+  <div class="arch-box">
+    <div class="arch-layers">
+      <span class="arch-chip">Creator fine-tuned LLM (LoRA / QLoRA)</span><span class="arch-chip">Voice clone (ElevenLabs professional)</span><span class="arch-chip">Style embedding from post corpus</span><span class="arch-chip">RAG on creator's full content history</span><span class="arch-chip">Guardrail layer (out-of-bounds detector)</span><span class="arch-chip">Approval workflow (human-in-loop)</span><span class="arch-chip">Fan sentiment tracker</span><span class="arch-chip">Memory per fan relationship</span>
+    </div>
+  </div>
+  <div class="grid3">
+    <div class="card"><div class="card-label"><i class="ti ti-database"></i> LLM + RAG + VectorDB</div><div class="card-body"><strong>Fine-tune:</strong> LoRA on creator's post corpus (&gt;500 posts recommended). <strong>RAG:</strong> Creator content index for factual grounding. <strong>VectorDB:</strong> Fan conversation history per creator-fan pair. <strong>LLM:</strong> Base Claude/GPT + creator-specific LoRA adapter.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-bolt"></i> Real-time requirements</div><div class="card-body">DM response: &lt;2s (streaming). Voice message generation: &lt;3s. Fine-tune jobs: async, hours-scale. Content suggestion pipeline: daily batch. Fan priority queue: real-time scoring. Approval queue: async, creator reviews at leisure.</div></div>
+    <div class="card"><div class="card-label"><i class="ti ti-currency-dollar"></i> Revenue model</div><div class="card-body">CloneCreator Pro: $49/month. Fan "time" with AI creator: $0.10–$1/minute (revenue share with creator). Custom fan experiences: premium packages. Enterprises use for brand personas. Creator keeps 70%, platform takes 30%.</div></div>
+  </div>
+  <div class="card"><div class="card-label"><i class="ti ti-lock"></i> Privacy & ethics</div><div class="card-body"><strong>Critical safeguards required.</strong> AI must always be labeled as AI — no deception. Creator must explicitly opt in and train the model. Guardrails prevent clone from making claims creator hasn't made. Fans can always escalate to real creator. Creator can delete clone at any time. Clone cannot be used by third parties or after creator leaves platform. Similar to Meta AI Studios and Character.ai — but with creator ownership of the AI.</div></div>
+</div>
+
+</div>
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.feature-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const panel=document.getElementById('panel-'+id);
+  const nav=document.getElementById('nav-'+id);
+  if(panel)panel.classList.add('active');
+  if(nav)nav.classList.add('active');
+  else{
+    const ovNav=document.getElementById('nav-overview');
+    if(ovNav)ovNav.classList.add('active');
+  }
+  document.querySelector('.main').scrollTop=0;
+}
+</script>

@@ -3,7 +3,7 @@
 
 ### To run in dev:
 
-```
+```sh
 pyenv install 3.13.4
 python -m pip install virtualenv
 python -m virtualenv venv
@@ -12,6 +12,11 @@ python -m pip install -r requirements.txt
 python manage.py makemigrations backend
 python manage.py migrate
 python manage.py runserver
+```
+
+### Run Tests:
+```sh
+python manage.py test --verbosity 2
 ```
 
 ### GENERATE PRIVATE & PUBLIC KEY:
