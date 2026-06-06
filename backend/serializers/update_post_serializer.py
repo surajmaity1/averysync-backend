@@ -19,8 +19,8 @@ class UpdatePostSerializer(serializers.Serializer):
                                         help_text='ending datetime of the Space')
     createdInTimezone = serializers.CharField(required=False, default=None,
                                               help_text='Timezone at the time of the post or space creation')
-    status = serializers.CharField(required=False, default=None,
-                                   help_text='Status of the space')
+    status = serializers.ChoiceField(required=False, default=None,
+                                   help_text='Status of the space', choices=[status.name for status in SpaceStatus])
     type = serializers.ChoiceField(required=False, default=None, choices=[type.name for type in PostType],
                                    help_text='Type of the post (POST, SPACE)')
 
@@ -34,12 +34,8 @@ class UpdatePostSerializer(serializers.Serializer):
             )
 
         post_type = data.get('type', None)
-        post_status = data.get('status', None)
 
         if post_type:
             raise serializers.ValidationError({f'type': 'type not allowed'})
-
-        if post_status and post_status not in SpaceStatus.__members__:
-            raise serializers.ValidationError({f'status': "status must be either 'OPEN', 'STARTED' or 'CLOSED'"})
 
         return data
