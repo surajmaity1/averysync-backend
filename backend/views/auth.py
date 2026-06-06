@@ -79,7 +79,7 @@ class GoogleCallbackView(APIView):
             request.session.pop("oauth_state", None)
 
             return response
-        except Exception as exception:
+        except Exception:
             return HttpResponseRedirect(f"{frontend_base_url}?error=auth_failed")
 
     def _get_cookie_config(self):

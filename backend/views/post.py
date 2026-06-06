@@ -1,12 +1,11 @@
 import uuid
 import time
-from datetime import datetime, timezone
 from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
 from backend.constants.messages import ApiErrors
-from backend.dto.post_dto import CreatePostDTO, UpdatePostDTO
+from backend.dto.post_dto import CreatePostDTO
 from backend.dto.responses.create_post_response import CreatePostResponse
 from backend.dto.responses.error_response import (
     ApiErrorDetail,
