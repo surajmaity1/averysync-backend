@@ -1,6 +1,1 @@
-update_posts_data = [
-    {
-        "title": "BLR meetup",
-        "status": "SCHEDULED"
-    }
-]
+update_posts_data = [{"title": "BLR meetup", "status": "SCHEDULED"}]

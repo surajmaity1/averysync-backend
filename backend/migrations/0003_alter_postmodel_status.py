@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('backend', '0002_postmodel_created_in_timezone_postmodel_ended_at_and_more'),
+        ("backend", "0002_postmodel_created_in_timezone_postmodel_ended_at_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='postmodel',
-            name='status',
-            field=models.IntegerField(blank=True, choices=[(1, 'Scheduled'), (2, 'Live'), (3, 'Ended'), (4, 'Closed')], null=True),
+            model_name="postmodel",
+            name="status",
+            field=models.IntegerField(
+                blank=True,
+                choices=[(1, "Scheduled"), (2, "Live"), (3, "Ended"), (4, "Closed")],
+                null=True,
+            ),
         ),
     ]

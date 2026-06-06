@@ -10,28 +10,32 @@ db_manager = DBManager()
 
 class HealthView(APIView):
     @extend_schema(
-        operation_id='health_check',
-        summary='Health check',
-        description='Check health of the backend app',
-        tags=['health'],
+        operation_id="health_check",
+        summary="Health check",
+        description="Check health of the backend app",
+        tags=["health"],
         responses={
-            200: OpenApiResponse(description='App is healthy'),
-            503: OpenApiResponse(description='App is not healthy')
-        }
+            200: OpenApiResponse(description="App is healthy"),
+            503: OpenApiResponse(description="App is not healthy"),
+        },
     )
     def get(self, request):
         global db_manager
-        
-        db_status = ComponentHealthStatus.UP.name if db_manager.check_db_health() else ComponentHealthStatus.DOWN.name
+
+        db_status = (
+            ComponentHealthStatus.UP.name
+            if db_manager.check_db_health()
+            else ComponentHealthStatus.DOWN.name
+        )
         overall_status = AppHealthStatus.UP
 
         response = {
-            'application': {
-                'status': overall_status.name,
+            "application": {
+                "status": overall_status.name,
             },
-            'database': {
-                'status': db_status,
+            "database": {
+                "status": db_status,
             },
         }
-        
+
         return Response(response, overall_status.http_status)
