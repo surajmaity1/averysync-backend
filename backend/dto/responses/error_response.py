@@ -4,7 +4,7 @@ from typing import Dict
 
 
 class ApiErrorSource(Enum):
-    PARAMETER = 'parameter'
+    PARAMETER = "parameter"
 
 
 class ApiErrorDetail(BaseModel):

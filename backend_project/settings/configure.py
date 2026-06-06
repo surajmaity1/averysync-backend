@@ -13,12 +13,12 @@ DEFAULT_SETTINGS = DEVELOPMENT_SETTINGS
 
 def configure_settings_module():
     env = os.getenv(ENV_VAR_NAME, DEVELOPMENT).upper()
-    
+
     django_settings_module = DEVELOPMENT_SETTINGS
 
     if env == PRODUCTION:
         django_settings_module = PRODUCTION_SETTINGS
     elif env == STAGING:
         django_settings_module = STAGING_SETTINGS
-    
+
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", django_settings_module)

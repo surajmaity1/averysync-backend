@@ -7,8 +7,12 @@ from backend.models.user import UserModel
 
 class ReminderModel(models.Model):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
-    post = models.ForeignKey(PostModel, on_delete=models.CASCADE, related_name="post_reminders")
-    user = models.ForeignKey(UserModel,on_delete=models.CASCADE,related_name="user_reminders")
+    post = models.ForeignKey(
+        PostModel, on_delete=models.CASCADE, related_name="post_reminders"
+    )
+    user = models.ForeignKey(
+        UserModel, on_delete=models.CASCADE, related_name="user_reminders"
+    )
     is_reminder_set = models.BooleanField(default=False, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
@@ -16,13 +20,13 @@ class ReminderModel(models.Model):
     created_by = models.CharField(max_length=100)
 
     class Meta:
-        db_table = 'reminders'
-        unique_together = ('post', 'user')
-        ordering = ['-created_at']
+        db_table = "reminders"
+        unique_together = ("post", "user")
+        ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=['id']),
-            models.Index(fields=['post_id']),
-            models.Index(fields=['created_by']),
+            models.Index(fields=["id"]),
+            models.Index(fields=["post_id"]),
+            models.Index(fields=["created_by"]),
         ]
 
     def save(self, *args, **kwargs):

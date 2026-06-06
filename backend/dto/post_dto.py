@@ -29,7 +29,7 @@ class CreatePostDTO(BaseModel):
     isRecorded: bool | None = None
     created_by: str
 
-    @field_validator('type', mode='before')
+    @field_validator("type", mode="before")
     def parse_type(cls, value):
         if isinstance(type, str):
             return PostType[value]
@@ -46,7 +46,7 @@ class UpdatePostDTO(BaseModel):
     endedAt: datetime | None = None
     createdInTimezone: str | None = None
     status: SpaceStatus | None = None
-    
+
     @field_validator("status", mode="before")
     def parse_status(cls, value):
         if isinstance(value, str):

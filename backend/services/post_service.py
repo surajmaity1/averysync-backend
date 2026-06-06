@@ -3,12 +3,20 @@ from backend.dto.post_dto import CreatePostDTO, PostDTO, UpdatePostDTO
 from backend.dto.responses.create_post_response import CreatePostResponse
 from backend.models.post import PostModel
 from backend.repositories.post_repository import PostRepository
-from backend.dto.responses.error_response import ApiErrorResponse, ApiErrorDetail, ApiErrorSource
+from backend.dto.responses.error_response import (
+    ApiErrorResponse,
+    ApiErrorDetail,
+    ApiErrorSource,
+)
 from backend.exceptions.auth_exceptions import ApiErrors
 from django.conf import settings
 from backend.dto.responses.get_posts_response import GetPostsResponse
 from django.core.exceptions import ValidationError
-from backend.exceptions.post_exception import PostNotFoundException, PostUpdateForbidden, PostAlreadyDeletedException
+from backend.exceptions.post_exception import (
+    PostNotFoundException,
+    PostUpdateForbidden,
+    PostAlreadyDeletedException,
+)
 from backend.constants.messages import ApiErrors
 
 
@@ -43,7 +51,11 @@ class PostService:
                 is_recorded=dto.isRecorded,
                 created_at=datetime.now(timezone.utc),
                 created_by=dto.created_by,
-                status=(PostModel.SpaceStatus.SCHEDULED if dto.type.name == 'SPACE' else None),
+                status=(
+                    PostModel.SpaceStatus.SCHEDULED
+                    if dto.type.name == "SPACE"
+                    else None
+                ),
             )
 
             created_post = PostRepository.create(post)
@@ -59,11 +71,17 @@ class PostService:
                     message=ApiErrors.REPOSITORY_ERROR,
                     errors=[
                         ApiErrorDetail(
-                            source={ApiErrorSource.PARAMETER: 'post_repository'},
+                            source={ApiErrorSource.PARAMETER: "post_repository"},
                             title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
-                            description=(str(e) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
+                            description=(
+                                str(e)
+                                if settings.DEBUG
+                                else ApiErrors.INTERNAL_SERVER_ERROR
+                            ),
                         )
-                    ] if settings.ERROR_DETAILS else ApiErrors.UNEXPECTED_ERROR_OCCURRED
+                    ]
+                    if settings.ERROR_DETAILS
+                    else ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                 )
             )
         except Exception as exception:
@@ -73,11 +91,17 @@ class PostService:
                     message=ApiErrors.INTERNAL_SERVER_ERROR,
                     errors=[
                         ApiErrorDetail(
-                            source={ApiErrorSource.PARAMETER: 'server'},
+                            source={ApiErrorSource.PARAMETER: "server"},
                             title=ApiErrors.UNEXPECTED_ERROR_OCCURRED,
-                            description=(str(exception) if settings.DEBUG else ApiErrors.INTERNAL_SERVER_ERROR),
+                            description=(
+                                str(exception)
+                                if settings.DEBUG
+                                else ApiErrors.INTERNAL_SERVER_ERROR
+                            ),
                         )
-                    ] if settings.ERROR_DETAILS else ApiErrors.UNEXPECTED_ERROR_OCCURRED
+                    ]
+                    if settings.ERROR_DETAILS
+                    else ApiErrors.UNEXPECTED_ERROR_OCCURRED,
                 )
             )
 
@@ -120,7 +144,7 @@ class PostService:
 
             return cls._prepare_post_dto(post_model=post_model)
         except Exception as exception:
-            raise ValueError(f'Post with id {post_id} not found: {str(exception)}')
+            raise ValueError(f"Post with id {post_id} not found: {str(exception)}")
 
     @classmethod
     def delete_post_by_id(cls, post_id: str, user_id: str) -> bool:
@@ -143,21 +167,27 @@ class PostService:
         return True
 
     @classmethod
-    def update_post_by_id(cls, post_id: str, user_id: str, validated_data: dict) -> PostDTO:
+    def update_post_by_id(
+        cls, post_id: str, user_id: str, validated_data: dict
+    ) -> PostDTO:
         try:
             post = PostService.get_post_by_id(post_id=post_id)
 
             if not post:
-                raise ValueError(f'post not found {post_id}')
+                raise ValueError(f"post not found {post_id}")
 
             if not post.createdBy == user_id:
                 raise PostUpdateForbidden(post_id=post_id)
 
-            updated_post = PostRepository.update_by_id(post_id=post_id, update_data=validated_data)
+            updated_post = PostRepository.update_by_id(
+                post_id=post_id, update_data=validated_data
+            )
 
             if not updated_post:
                 raise ValueError(ApiErrors.POST_SPACE_UPDATE_FAILED.format(post_id))
 
             return cls._prepare_post_dto(updated_post)
         except Exception as exception:
-            raise ValueError(f'{ApiErrors.POST_SPACE_UPDATE_FAILED.format(post_id)} with exception: {str(exception)}')
+            raise ValueError(
+                f"{ApiErrors.POST_SPACE_UPDATE_FAILED.format(post_id)} with exception: {str(exception)}"
+            )

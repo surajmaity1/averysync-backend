@@ -13,14 +13,12 @@ class UserModel(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(null=True, blank=True)
 
-
     class Meta:
-        db_table = 'users'
+        db_table = "users"
         indexes = [
-            models.Index(fields=['user_id']),
-            models.Index(fields=['email']),
+            models.Index(fields=["user_id"]),
+            models.Index(fields=["email"]),
         ]
-    
 
     def save(self, *args, **kwargs):
         if not self.pk:

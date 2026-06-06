@@ -3,7 +3,7 @@ from typing import Generic, TypeVar, Optional
 from pydantic import BaseModel
 
 
-T = TypeVar('T', bound = BaseModel)
+T = TypeVar("T", bound=BaseModel)
 
 
 class AbstractRepository(ABC, Generic[T]):
