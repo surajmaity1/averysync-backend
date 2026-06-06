@@ -3,8 +3,6 @@ import uuid
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
-from backend.utils.uuid_validation import validate_uuid
-
 
 class StreamView(APIView):
     def get(self, request: Request, space_id: uuid.UUID):

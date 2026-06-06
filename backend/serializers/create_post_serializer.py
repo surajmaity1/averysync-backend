@@ -48,6 +48,6 @@ class CreatePostSerializer(serializers.Serializer):
 
         if post_type not in PostType:
             raise serializers.ValidationError(
-                {f"type": "type must be either 'POST' or 'SPACE'"}
+                {"type": "type must be either 'POST' or 'SPACE'"}
             )
         return data

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from backend.dto.post_dto import CreatePostDTO, PostDTO, UpdatePostDTO
+from backend.dto.post_dto import CreatePostDTO, PostDTO
 from backend.dto.responses.create_post_response import CreatePostResponse
 from backend.models.post import PostModel
 from backend.repositories.post_repository import PostRepository
@@ -115,7 +115,7 @@ class PostService:
 
             posts_dto = [cls._prepare_post_dto(post) for post in posts]
             return GetPostsResponse(posts=posts_dto)
-        except ValidationError as e:
+        except ValidationError:
             return GetPostsResponse(
                 posts=[],
                 # links=None,
@@ -124,7 +124,7 @@ class PostService:
                 #     'message': str(e) if settings.DEBUG else ApiErrors.VALIDATION_ERROR
                 # }
             )
-        except Exception as e:
+        except Exception:
             return GetPostsResponse(
                 posts=[],
                 # links=None,

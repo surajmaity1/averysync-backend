@@ -1,5 +1,3 @@
-from random import choices
-
 from rest_framework import serializers
 from backend.constants.post import PostType, SpaceStatus
 
@@ -70,6 +68,6 @@ class UpdatePostSerializer(serializers.Serializer):
         post_type = data.get("type", None)
 
         if post_type:
-            raise serializers.ValidationError({f"type": "type not allowed"})
+            raise serializers.ValidationError({"type": "type not allowed"})
 
         return data
