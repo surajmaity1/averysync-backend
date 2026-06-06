@@ -29,10 +29,10 @@ class PostModel(models.Model):
     updated_by = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
-        db_table = 'posts'
+        db_table = "posts"
         indexes = [
-            models.Index(fields=['created_at']),
-            models.Index(fields=['type']),
+            models.Index(fields=["created_at"]),
+            models.Index(fields=["type"]),
         ]
 
     def save(self, *args, **kwargs):

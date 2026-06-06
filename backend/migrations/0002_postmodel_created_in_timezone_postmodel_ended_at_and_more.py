@@ -4,40 +4,41 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('backend', '0001_initial'),
+        ("backend", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='postmodel',
-            name='created_in_timezone',
+            model_name="postmodel",
+            name="created_in_timezone",
             field=models.CharField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='postmodel',
-            name='ended_at',
+            model_name="postmodel",
+            name="ended_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='postmodel',
-            name='scheduled_ended_at',
+            model_name="postmodel",
+            name="scheduled_ended_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='postmodel',
-            name='scheduled_started_at',
+            model_name="postmodel",
+            name="scheduled_started_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='postmodel',
-            name='started_at',
+            model_name="postmodel",
+            name="started_at",
             field=models.DateTimeField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='postmodel',
-            name='status',
-            field=models.IntegerField(blank=True, choices=[(1, 'Open'), (2, 'Closed')], null=True),
+            model_name="postmodel",
+            name="status",
+            field=models.IntegerField(
+                blank=True, choices=[(1, "Open"), (2, "Closed")], null=True
+            ),
         ),
     ]

@@ -2,7 +2,9 @@ from backend.constants.messages import ApiErrors
 
 
 class PostNotFoundException(Exception):
-    def __init__(self, post_id: str | None = None, msg: str = ApiErrors.POST_NOT_FOUND_WITH_ID):
+    def __init__(
+        self, post_id: str | None = None, msg: str = ApiErrors.POST_NOT_FOUND_WITH_ID
+    ):
         if post_id:
             self.msg = msg.format(post_id)
         else:
@@ -11,7 +13,9 @@ class PostNotFoundException(Exception):
 
 
 class PostUpdateForbidden(Exception):
-    def __init__(self, post_id: str, message: str = ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED):
+    def __init__(
+        self, post_id: str, message: str = ApiErrors.POST_SPACE_UPDATE_NOT_ALLOWED
+    ):
         self.message = message.format(post_id)
         super().__init__(self.message)
 
