@@ -27,4 +27,4 @@ class UpdatePostSerializerTests(TestCase):
         data["type"] = "SPACE"
         serializer = UpdatePostSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn(f"type not allowed", serializer.errors["type"])
+        self.assertIn("type not allowed", serializer.errors["type"])
