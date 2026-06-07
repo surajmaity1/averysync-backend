@@ -15,6 +15,14 @@ python manage.py runserver
 python3 manage.py test --verbosity 2
 ```
 
+### To run workflow locally:
+
+- [Act Docs](https://nektosact.com/usage/index.html)
+
+```bash
+act -W '.github/workflows/<yml-file-name.yml>' --container-architecture=linux/amd64
+```
+
 ### GENERATE PRIVATE & PUBLIC KEY:
 ```
 openssl genrsa -out private_key.pem 2048
