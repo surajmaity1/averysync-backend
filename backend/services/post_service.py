@@ -8,7 +8,6 @@ from backend.dto.responses.error_response import (
     ApiErrorDetail,
     ApiErrorSource,
 )
-from backend.exceptions.auth_exceptions import ApiErrors
 from django.conf import settings
 from backend.dto.responses.get_posts_response import GetPostsResponse
 from django.core.exceptions import ValidationError
