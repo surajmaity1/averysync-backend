@@ -1,6 +1,5 @@
 # backend-api-django
 
-
 ### To run in dev:
 
 ```bash
@@ -12,7 +11,15 @@ python -m pip install -r requirements.txt
 python manage.py makemigrations backend
 python manage.py migrate
 python manage.py runserver
+```
+
+### To run tests locally:
+
+```bash
 python3 manage.py test --verbosity 2
+
+# for individual test (for repository specific test)
+python manage.py test <path>
 ```
 
 ### To run workflow locally:
@@ -24,6 +31,7 @@ act -W '.github/workflows/<yml-file-name.yml>' --container-architecture=linux/am
 ```
 
 ### GENERATE PRIVATE & PUBLIC KEY:
+
 ```
 openssl genrsa -out private_key.pem 2048
 openssl rsa -in private_key.pem -pubout -out public_key.pem
@@ -31,22 +39,26 @@ openssl rsa -in private_key.pem -pubout -out public_key.pem
 
 ### APIs:
 
-Health API: 
+Health API:
+
 ```bash
 http://localhost:8000/v1/health
 ```
 
-GOOGLE LogIn API: 
+GOOGLE LogIn API:
+
 ```bash
 http://localhost:8000/v1/auth/google/login
 ```
 
-Users API: 
+Users API:
+
 ```bash
 http://localhost:8000/v1/users?profile=true
 ```
 
-Posts API: 
+Posts API:
+
 ```bash
 http://localhost:8000/v1/posts
 ```
