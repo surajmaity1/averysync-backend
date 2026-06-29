@@ -18,10 +18,15 @@ class JWTAuthenticationMiddleware:
     def __init__(self, get_response) -> None:
         self.get_response = get_response
 
+    SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS", "TRACE"})
+
     def __call__(self, request):
         try:
             if self._check_public_path(request.path):
                 return self.get_response(request)
+
+            if not self._passes_csrf(request):
+                return self._forbidden_csrf_response()
 
             is_authenticated = self._authentication(request)
 
@@ -107,7 +112,40 @@ class JWTAuthenticationMiddleware:
 
     def _check_public_path(self, path: str) -> bool:
         return any(
-            path.startswith(public_path) for public_path in settings.PUBLIC_PATHS
+            path == public_path or path.startswith(public_path.rstrip("/") + "/")
+            for public_path in settings.PUBLIC_PATHS
+        )
+
+    def _passes_csrf(self, request) -> bool:
+        if request.method in self.SAFE_METHODS:
+            return True
+
+        origin = request.headers.get("Origin")
+        if not origin:
+            return True
+
+        return origin in set(getattr(settings, "CORS_ALLOWED_ORIGINS", []))
+
+    def _forbidden_csrf_response(self):
+        error_response = ApiErrorResponse(
+            statusCode=status.HTTP_403_FORBIDDEN,
+            message=ApiErrors.AUTHENTICATION_FAILED.format(
+                "cross-origin request blocked"
+            ),
+            errors=[
+                ApiErrorDetail(
+                    title=ApiErrors.AUTHENTICATION_FAILED.format(
+                        "cross-origin request blocked"
+                    ),
+                    description=AuthErrorMessages.AUTHENTICATION_REQUIRED,
+                )
+            ]
+            if settings.ERROR_DETAILS
+            else AuthErrorMessages.AUTHENTICATION_REQUIRED,
+        )
+        return JsonResponse(
+            data=error_response.model_dump(mode="json", exclude_none=True),
+            status=status.HTTP_403_FORBIDDEN,
         )
 
     def _set_user_data(self, request, payload):
@@ -131,7 +169,7 @@ class JWTAuthenticationMiddleware:
 
             payload = validate_token(refresh_token, "Refresh")
             user_details = {
-                "user_id": payload["user_id"],
+                "id": payload["user_id"],
             }
             generate_new_access_token = generate_token(user_details, "Access")
             self._set_user_data(request, payload)
@@ -158,7 +196,7 @@ class JWTAuthenticationMiddleware:
                 except (TokenInvalidError, TokenExpiredError):
                     pass
 
-            return self._refresh_token(self, request)
+            return self._refresh_token(request)
         except (TokenExpiredError, TokenInvalidError) as e:
             raise e
         except Exception:

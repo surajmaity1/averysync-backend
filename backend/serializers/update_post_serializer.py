@@ -4,12 +4,18 @@ from backend.constants.post import PostType, SpaceStatus
 
 class UpdatePostSerializer(serializers.Serializer):
     title = serializers.CharField(
-        required=False, allow_blank=False, default=None, help_text="Title of the post"
+        required=False,
+        allow_blank=False,
+        default=None,
+        help_text="Title of the post",
+        min_length=3,
+        max_length=100,
     )
     description = serializers.CharField(
         required=False,
         default=None,
         allow_null=True,
+        max_length=300,
         help_text="Description of the post",
     )
     isRecorded = serializers.BooleanField(

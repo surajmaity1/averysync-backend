@@ -16,7 +16,7 @@ def generate_token(user_details: dict, token_type: str) -> str:
         )
 
         payload = {
-            "iss": "backend-app-auth",
+            "iss": settings.JWT_CONFIG.get("ISSUER"),
             "iat": int(issued_at.timestamp()),
             "exp": int(expired.timestamp()),
             "token_type": f"{token_type.lower()}",
@@ -42,7 +42,9 @@ def validate_token(token: str, token_type: str) -> dict:
         payload = jwt.decode(
             jwt=token,
             key=settings.JWT_CONFIG.get("PUBLIC_KEY"),
-            algorithms=settings.JWT_CONFIG.get("ALGORITHM"),
+            algorithms=[settings.JWT_CONFIG.get("ALGORITHM")],
+            issuer=settings.JWT_CONFIG.get("ISSUER"),
+            options={"require": ["exp", "iss", "user_id", "token_type"]},
         )
 
         if payload.get("token_type") != token_type.lower():
