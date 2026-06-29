@@ -2,6 +2,8 @@ import os
 
 from pathlib import Path
 
+from backend.utils.env import env_bool
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -9,13 +11,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv(
-    "SECRET_KEY", "django-insecure-o8kw8vwdyoa+1xh%ca0ovm94j=smhoym55hod0k74yw791m@43"
-)
+# A weak fallback is only acceptable for local development; production settings
+# fail fast if a real SECRET_KEY is not supplied.
+INSECURE_DEV_SECRET_KEY = "django-insecure-dev-only-do-not-use-in-production"
+SECRET_KEY = os.getenv("SECRET_KEY", INSECURE_DEV_SECRET_KEY)
 
-DEBUG = True
+DEBUG = env_bool("DEBUG", default=False)
 
-ERROR_DETAILS = os.getenv("ERROR_DETAILS", False)
+ERROR_DETAILS = env_bool("ERROR_DETAILS", default=False)
 
 ALLOWED_HOSTS = (
     os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
@@ -49,14 +52,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.security.SecurityMiddleware",
     "backend.middlewares.jwt_auth.JWTAuthenticationMiddleware",
 ]
 
@@ -162,7 +164,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
 POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
 POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "123456")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
 POSTGRES_DB = os.getenv("POSTGRES_DB", "backend_db")
 ENGINE = "django.db.backends.postgresql"
 
@@ -184,12 +186,18 @@ JWT_CONFIG = {
     "PRIVATE_KEY": os.getenv("PRIVATE_KEY"),
     "PUBLIC_KEY": os.getenv("PUBLIC_KEY"),
     "ALGORITHM": "RS256",
+    "ISSUER": os.getenv("JWT_ISSUER", "backend-app-auth"),
 }
 
 GOOGLE_OAUTH = {
     "CLIENT_ID": os.getenv("GOOGLE_OAUTH_CLIENT_ID"),
     "CLIENT_SECRET": os.getenv("GOOGLE_OAUTH_CLIENT_SECRET"),
     "REDIRECT_URI": os.getenv("GOOGLE_OAUTH_REDIRECT_URI"),
+    "ALLOWED_REDIRECT_URIS": (
+        os.getenv("GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS", "").split(",")
+        if os.getenv("GOOGLE_OAUTH_ALLOWED_REDIRECT_URIS")
+        else []
+    ),
 }
 
 COOKIE_SETTINGS = {
