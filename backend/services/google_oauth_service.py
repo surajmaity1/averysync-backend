@@ -18,7 +18,7 @@ class GoogleOAuthService:
 
             params = {
                 "client_id": settings.GOOGLE_OAUTH["CLIENT_ID"],
-                "redirect_uri": redirect_url or settings.GOOGLE_OAUTH["REDIRECT_URI"],
+                "redirect_uri": cls._resolve_redirect_uri(redirect_url),
                 "response_type": "code",
                 "scope": "openid email profile",
                 "access_type": "offline",
@@ -30,6 +30,17 @@ class GoogleOAuthService:
             return auth_url, state
         except Exception:
             raise AuthException(ApiErrors.GOOGLE_AUTH_FAILED)
+
+    @classmethod
+    def _resolve_redirect_uri(cls, redirect_url: str | None) -> str:
+        default_uri = settings.GOOGLE_OAUTH["REDIRECT_URI"]
+        if not redirect_url:
+            return default_uri
+
+        allowed = settings.GOOGLE_OAUTH.get("ALLOWED_REDIRECT_URIS") or [default_uri]
+        if redirect_url in allowed:
+            return redirect_url
+        return default_uri
 
     @classmethod
     def _exchange_code_for_tokens(cls, authorization_code: str) -> dict:

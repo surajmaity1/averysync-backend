@@ -169,24 +169,24 @@ class PostService:
     def update_post_by_id(
         cls, post_id: str, user_id: str, validated_data: dict
     ) -> PostDTO:
+        post = PostService.get_post_by_id(post_id=post_id)
+
+        if not post:
+            raise ValueError(f"post not found {post_id}")
+
+        if not post.createdBy == user_id:
+            raise PostUpdateForbidden(post_id=post_id)
+
         try:
-            post = PostService.get_post_by_id(post_id=post_id)
-
-            if not post:
-                raise ValueError(f"post not found {post_id}")
-
-            if not post.createdBy == user_id:
-                raise PostUpdateForbidden(post_id=post_id)
-
             updated_post = PostRepository.update_by_id(
                 post_id=post_id, update_data=validated_data
             )
-
-            if not updated_post:
-                raise ValueError(ApiErrors.POST_SPACE_UPDATE_FAILED.format(post_id))
-
-            return cls._prepare_post_dto(updated_post)
         except Exception as exception:
             raise ValueError(
                 f"{ApiErrors.POST_SPACE_UPDATE_FAILED.format(post_id)} with exception: {str(exception)}"
             )
+
+        if not updated_post:
+            raise ValueError(ApiErrors.POST_SPACE_UPDATE_FAILED.format(post_id))
+
+        return cls._prepare_post_dto(updated_post)

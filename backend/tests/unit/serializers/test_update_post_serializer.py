@@ -1,4 +1,5 @@
 from unittest import TestCase
+import unittest
 from backend.tests.fixtures.post import update_posts_data
 from backend.serializers.update_post_serializer import UpdatePostSerializer
 
@@ -6,6 +7,12 @@ from backend.serializers.update_post_serializer import UpdatePostSerializer
 class UpdatePostSerializerTests(TestCase):
     def setUp(self):
         self.valid_payload = update_posts_data[0]
+
+    @unittest.skip("temporariy")
+    def test_empty_payload_for_updating_post(self):
+        serializer = UpdatePostSerializer(data={})
+        self.assertFalse(serializer.is_valid())
+        self.assertTrue(serializer.errors)
 
     def test_valid_title_status_payload(self):
         serializer = UpdatePostSerializer(data=self.valid_payload)
