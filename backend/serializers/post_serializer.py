@@ -53,7 +53,6 @@ class CreatePostSerializer(serializers.Serializer):
         return data
 
 
-
 class UpdatePostSerializer(serializers.Serializer):
     title = serializers.CharField(
         required=False,

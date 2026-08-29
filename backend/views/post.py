@@ -12,7 +12,10 @@ from backend.dto.responses.error_response import (
     ApiErrorSource,
     ApiErrorResponse,
 )
-from serializers.post_serializer import CreatePostSerializer, UpdatePostSerializer
+from backend.serializers.post_serializer import (
+    CreatePostSerializer,
+    UpdatePostSerializer,
+)
 from backend.services.post_service import PostService
 from django.conf import settings
 from backend.exceptions.post_exception import (

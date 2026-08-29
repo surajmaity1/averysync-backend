@@ -1,7 +1,7 @@
 from unittest import TestCase
 import unittest
 from backend.tests.fixtures.post import update_posts_data
-from serializers.post_serializer import UpdatePostSerializer
+from backend.serializers.post_serializer import UpdatePostSerializer
 
 
 class UpdatePostSerializerTests(TestCase):
