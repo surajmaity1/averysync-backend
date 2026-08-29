@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from backend.constants.post import PostType
-from backend.serializers.create_post_serializer import CreatePostSerializer
+from backend.serializers.post_serializer import CreatePostSerializer
 
 
 class CreatePostSerializerTests(TestCase):
