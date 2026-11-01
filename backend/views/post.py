@@ -110,7 +110,7 @@ class PostView(APIView):
 
     def get(self, request: Request):
         try:
-            response = PostService.get_posts()
+            response = PostService.get_posts(viewer_id=request.user_id)
 
             if response.errors:
                 if response.errors.get("code") == "400":
@@ -158,7 +158,7 @@ class PostDetailView(APIView):
             if not validate_post_id:
                 raise ValueError(f"post not found {post_id}")
 
-            post_dto = PostService.get_post_by_id(post_id)
+            post_dto = PostService.get_post_by_id(post_id, viewer_id=request.user_id)
 
             token = self._get_stream_token(post_dto, request.user_id)
             response_data = GetPostByIdResponse(data=post_dto, token=token)

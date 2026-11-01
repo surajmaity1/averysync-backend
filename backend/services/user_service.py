@@ -1,8 +1,14 @@
 from backend.models.user import UserModel
+from backend.constants.follow import RelationshipStatus
 from backend.constants.messages import ValidationErrors, RepositoryError
 from rest_framework.exceptions import ValidationError
+from backend.dto.follow_dto import RelationshipDTO
+from backend.dto.profile_dto import ProfileDTO, UpdateProfileDTO
+from backend.repositories.block_repository import BlockRepository
 from backend.repositories.user_repositories import UserRepository
 from backend.exceptions.auth_exceptions import UserNotFoundException, APIException
+from backend.exceptions.follow_exception import UserBlockedException
+from backend.services.follow_service import FollowService
 
 
 class UserService:
@@ -47,3 +53,34 @@ class UserService:
             raise APIException(
                 RepositoryError.USER_NOT_FOUND.format(str(exception))
             ) from exception
+
+    @classmethod
+    def _prepare_profile_dto(
+        cls, user: UserModel, relationship: RelationshipDTO
+    ) -> ProfileDTO:
+        return ProfileDTO(
+            id=user.id,
+            name=user.name,
+            image=user.image,
+            isPrivate=user.is_private,
+            followerCount=user.follower_count,
+            followingCount=user.following_count,
+            relationship=relationship,
+        )
+
+    @classmethod
+    def update_profile(cls, user_id: str, dto: UpdateProfileDTO) -> ProfileDTO:
+        user = UserRepository.update_profile(user_id=user_id, is_private=dto.isPrivate)
+        relationship = RelationshipDTO(status=RelationshipStatus.SELF, followsYou=False)
+        return cls._prepare_profile_dto(user, relationship)
+
+    @classmethod
+    def get_profile(cls, viewer_id: str, target_user_id: str) -> ProfileDTO:
+        if BlockRepository.is_blocked(viewer_id, target_user_id):
+            raise UserBlockedException(target_user_id)
+
+        user = UserRepository.get_by_id(target_user_id)
+        relationship = FollowService.relationship_for(
+            viewer_id=viewer_id, target_id=target_user_id
+        )
+        return cls._prepare_profile_dto(user, relationship)
