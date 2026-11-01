@@ -204,6 +204,66 @@ class GetPostByIdTests(TestCase):
         self.assertIn(post_id, str(ctx.exception))
 
 
+class PreparePostDTOLikeTests(TestCase):
+    def test_maps_like_count_and_defaults_liked_by_me_false(self):
+        model = build_post_model(like_count=7)
+
+        dto = PostService._prepare_post_dto(model)
+
+        self.assertEqual(dto.likeCount, 7)
+        self.assertFalse(dto.likedByMe)
+
+    def test_sets_liked_by_me_when_passed(self):
+        model = build_post_model(like_count=1)
+
+        dto = PostService._prepare_post_dto(model, liked_by_me=True)
+
+        self.assertTrue(dto.likedByMe)
+
+
+class GetPostsLikeTests(TestCase):
+    @patch("backend.services.post_service.PostLikeRepository.liked_post_ids")
+    @patch("backend.services.post_service.PostRepository.get_posts")
+    def test_marks_liked_posts_for_the_viewer(self, mock_get_posts, mock_liked_ids):
+        liked = build_post_model()
+        not_liked = build_post_model()
+        mock_get_posts.return_value = [liked, not_liked]
+        mock_liked_ids.return_value = {str(liked.id)}
+
+        response = PostService.get_posts(viewer_id="viewer-1")
+
+        by_id = {dto.id: dto for dto in response.posts}
+        self.assertTrue(by_id[liked.id].likedByMe)
+        self.assertFalse(by_id[not_liked.id].likedByMe)
+        mock_liked_ids.assert_called_once_with(
+            "viewer-1", [str(liked.id), str(not_liked.id)]
+        )
+
+    @patch("backend.services.post_service.PostLikeRepository.liked_post_ids")
+    @patch("backend.services.post_service.PostRepository.get_posts")
+    def test_anonymous_viewer_never_marks_liked(self, mock_get_posts, mock_liked_ids):
+        mock_get_posts.return_value = [build_post_model()]
+
+        response = PostService.get_posts()
+
+        self.assertFalse(response.posts[0].likedByMe)
+        mock_liked_ids.assert_not_called()
+
+
+class GetPostByIdLikeTests(TestCase):
+    @patch("backend.services.post_service.PostLikeRepository.is_liked")
+    @patch("backend.services.post_service.PostRepository.get_by_id")
+    def test_reflects_viewer_like_state(self, mock_get_by_id, mock_is_liked):
+        model = build_post_model()
+        mock_get_by_id.return_value = model
+        mock_is_liked.return_value = True
+
+        dto = PostService.get_post_by_id(str(model.id), viewer_id="viewer-1")
+
+        self.assertTrue(dto.likedByMe)
+        mock_is_liked.assert_called_once_with(user_id="viewer-1", post_id=str(model.id))
+
+
 class DeletePostByIdTests(TestCase):
     def setUp(self):
         self.user_id = "owner-id"
@@ -313,6 +373,103 @@ class UpdatePostByIdTests(TestCase):
             )
 
         self.assertIn(str(model.id), str(ctx.exception))
+
+
+class UpdatePostCloseOutHookTests(TestCase):
+    def setUp(self):
+        self.user_id = "owner-id"
+
+    @patch("backend.services.post_service.SpaceParticipantRepository.close_out")
+    @patch("backend.services.post_service.PostRepository.update_by_id")
+    @patch("backend.services.post_service.PostRepository.get_by_id")
+    def test_transition_to_ended_closes_out_participants_at_ended_at(
+        self, mock_get_by_id, mock_update, mock_close_out
+    ):
+        ended_at = datetime(2026, 7, 12, 12, 0, 0, tzinfo=timezone.utc)
+        model = build_post_model(created_by=self.user_id)
+        mock_get_by_id.return_value = model
+        mock_update.return_value = build_post_model(
+            created_by=self.user_id,
+            status=PostModel.SpaceStatus.ENDED,
+            ended_at=ended_at,
+        )
+
+        PostService.update_post_by_id(
+            post_id=str(model.id),
+            user_id=self.user_id,
+            validated_data={"status": SpaceStatus.ENDED.value},
+        )
+
+        mock_close_out.assert_called_once_with(post_id=str(model.id), ended_at=ended_at)
+
+    @patch("backend.services.post_service.SpaceParticipantRepository.close_out")
+    @patch("backend.services.post_service.PostRepository.update_by_id")
+    @patch("backend.services.post_service.PostRepository.get_by_id")
+    def test_transition_to_closed_closes_out_participants(
+        self, mock_get_by_id, mock_update, mock_close_out
+    ):
+        ended_at = datetime(2026, 7, 12, 12, 0, 0, tzinfo=timezone.utc)
+        model = build_post_model(created_by=self.user_id)
+        mock_get_by_id.return_value = model
+        mock_update.return_value = build_post_model(
+            created_by=self.user_id,
+            status=PostModel.SpaceStatus.CLOSED,
+            ended_at=ended_at,
+        )
+
+        PostService.update_post_by_id(
+            post_id=str(model.id),
+            user_id=self.user_id,
+            validated_data={"status": SpaceStatus.CLOSED.value},
+        )
+
+        mock_close_out.assert_called_once_with(post_id=str(model.id), ended_at=ended_at)
+
+    @patch("backend.services.post_service.SpaceParticipantRepository.close_out")
+    @patch("backend.services.post_service.PostRepository.update_by_id")
+    @patch("backend.services.post_service.PostRepository.get_by_id")
+    def test_non_terminal_update_does_not_close_out(
+        self, mock_get_by_id, mock_update, mock_close_out
+    ):
+        model = build_post_model(created_by=self.user_id)
+        mock_get_by_id.return_value = model
+        mock_update.return_value = build_post_model(
+            created_by=self.user_id,
+            status=PostModel.SpaceStatus.LIVE,
+        )
+
+        PostService.update_post_by_id(
+            post_id=str(model.id),
+            user_id=self.user_id,
+            validated_data={"status": SpaceStatus.LIVE.value},
+        )
+
+        mock_close_out.assert_not_called()
+
+    @patch("backend.services.post_service.SpaceParticipantRepository.close_out")
+    @patch("backend.services.post_service.PostRepository.update_by_id")
+    @patch("backend.services.post_service.PostRepository.get_by_id")
+    def test_close_out_uses_now_when_ended_at_missing(
+        self, mock_get_by_id, mock_update, mock_close_out
+    ):
+        model = build_post_model(created_by=self.user_id)
+        mock_get_by_id.return_value = model
+        mock_update.return_value = build_post_model(
+            created_by=self.user_id,
+            status=PostModel.SpaceStatus.ENDED,
+            ended_at=None,
+        )
+
+        PostService.update_post_by_id(
+            post_id=str(model.id),
+            user_id=self.user_id,
+            validated_data={"status": SpaceStatus.ENDED.value},
+        )
+
+        mock_close_out.assert_called_once()
+        _, kwargs = mock_close_out.call_args
+        self.assertEqual(kwargs["post_id"], str(model.id))
+        self.assertIsInstance(kwargs["ended_at"], datetime)
 
 
 # Exercise the non-detailed error branch to cover the `else` of the error builder.

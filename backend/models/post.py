@@ -22,6 +22,7 @@ class PostModel(models.Model):
     ended_at = models.DateTimeField(null=True, blank=True)
     created_in_timezone = models.CharField(null=True, blank=True)
     status = models.IntegerField(choices=SpaceStatus, null=True, blank=True)
+    like_count = models.IntegerField(default=0)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(null=True, blank=True)
