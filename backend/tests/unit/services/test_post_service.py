@@ -315,6 +315,103 @@ class UpdatePostByIdTests(TestCase):
         self.assertIn(str(model.id), str(ctx.exception))
 
 
+class UpdatePostCloseOutHookTests(TestCase):
+    def setUp(self):
+        self.user_id = "owner-id"
+
+    @patch("backend.services.post_service.SpaceParticipantRepository.close_out")
+    @patch("backend.services.post_service.PostRepository.update_by_id")
+    @patch("backend.services.post_service.PostRepository.get_by_id")
+    def test_transition_to_ended_closes_out_participants_at_ended_at(
+        self, mock_get_by_id, mock_update, mock_close_out
+    ):
+        ended_at = datetime(2026, 7, 12, 12, 0, 0, tzinfo=timezone.utc)
+        model = build_post_model(created_by=self.user_id)
+        mock_get_by_id.return_value = model
+        mock_update.return_value = build_post_model(
+            created_by=self.user_id,
+            status=PostModel.SpaceStatus.ENDED,
+            ended_at=ended_at,
+        )
+
+        PostService.update_post_by_id(
+            post_id=str(model.id),
+            user_id=self.user_id,
+            validated_data={"status": SpaceStatus.ENDED.value},
+        )
+
+        mock_close_out.assert_called_once_with(post_id=str(model.id), ended_at=ended_at)
+
+    @patch("backend.services.post_service.SpaceParticipantRepository.close_out")
+    @patch("backend.services.post_service.PostRepository.update_by_id")
+    @patch("backend.services.post_service.PostRepository.get_by_id")
+    def test_transition_to_closed_closes_out_participants(
+        self, mock_get_by_id, mock_update, mock_close_out
+    ):
+        ended_at = datetime(2026, 7, 12, 12, 0, 0, tzinfo=timezone.utc)
+        model = build_post_model(created_by=self.user_id)
+        mock_get_by_id.return_value = model
+        mock_update.return_value = build_post_model(
+            created_by=self.user_id,
+            status=PostModel.SpaceStatus.CLOSED,
+            ended_at=ended_at,
+        )
+
+        PostService.update_post_by_id(
+            post_id=str(model.id),
+            user_id=self.user_id,
+            validated_data={"status": SpaceStatus.CLOSED.value},
+        )
+
+        mock_close_out.assert_called_once_with(post_id=str(model.id), ended_at=ended_at)
+
+    @patch("backend.services.post_service.SpaceParticipantRepository.close_out")
+    @patch("backend.services.post_service.PostRepository.update_by_id")
+    @patch("backend.services.post_service.PostRepository.get_by_id")
+    def test_non_terminal_update_does_not_close_out(
+        self, mock_get_by_id, mock_update, mock_close_out
+    ):
+        model = build_post_model(created_by=self.user_id)
+        mock_get_by_id.return_value = model
+        mock_update.return_value = build_post_model(
+            created_by=self.user_id,
+            status=PostModel.SpaceStatus.LIVE,
+        )
+
+        PostService.update_post_by_id(
+            post_id=str(model.id),
+            user_id=self.user_id,
+            validated_data={"status": SpaceStatus.LIVE.value},
+        )
+
+        mock_close_out.assert_not_called()
+
+    @patch("backend.services.post_service.SpaceParticipantRepository.close_out")
+    @patch("backend.services.post_service.PostRepository.update_by_id")
+    @patch("backend.services.post_service.PostRepository.get_by_id")
+    def test_close_out_uses_now_when_ended_at_missing(
+        self, mock_get_by_id, mock_update, mock_close_out
+    ):
+        model = build_post_model(created_by=self.user_id)
+        mock_get_by_id.return_value = model
+        mock_update.return_value = build_post_model(
+            created_by=self.user_id,
+            status=PostModel.SpaceStatus.ENDED,
+            ended_at=None,
+        )
+
+        PostService.update_post_by_id(
+            post_id=str(model.id),
+            user_id=self.user_id,
+            validated_data={"status": SpaceStatus.ENDED.value},
+        )
+
+        mock_close_out.assert_called_once()
+        _, kwargs = mock_close_out.call_args
+        self.assertEqual(kwargs["post_id"], str(model.id))
+        self.assertIsInstance(kwargs["ended_at"], datetime)
+
+
 # Exercise the non-detailed error branch to cover the `else` of the error builder.
 @override_settings(ERROR_DETAILS=False, DEBUG=False)
 class CreatePostErrorWithoutDetailsTests(TestCase):

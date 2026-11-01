@@ -1,5 +1,6 @@
 import uuid
 import time
+import logging
 from rest_framework.views import APIView
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -12,10 +13,8 @@ from backend.dto.responses.error_response import (
     ApiErrorSource,
     ApiErrorResponse,
 )
-from backend.serializers.post_serializer import (
-    CreatePostSerializer,
-    UpdatePostSerializer,
-)
+from backend.serializers.create_post_serializer import CreatePostSerializer
+from backend.serializers.update_post_serializer import UpdatePostSerializer
 from backend.services.post_service import PostService
 from django.conf import settings
 from backend.exceptions.post_exception import (
@@ -34,6 +33,9 @@ from backend.dto.responses.get_reminder_by_space_id_response import (
 from backend.exceptions.reminder_exception import ReminderNotFoundException
 from backend.constants.post import SpaceStatus, PostType
 from backend.utils.stream import Stream
+from backend.services.space_participant_service import SpaceParticipantService
+
+logger = logging.getLogger(__name__)
 
 
 class PostView(APIView):
@@ -417,18 +419,41 @@ class PostDetailView(APIView):
 
     def _get_stream_token(self, post_dto, user_id):
         if post_dto.type == PostType.SPACE and post_dto.status == SpaceStatus.LIVE:
+            self._ensure_participant_record(post_dto, user_id)
             # Only the creator is a speaker by default
             is_speaker = str(post_dto.createdBy) == str(user_id)
+            # The SFU reads the mute from the connection token on every (re)connect
+            # and treats it as authoritative; omitting it lets a reconnect silently
+            # lift a host mute so everyone hears the muted peer again.
+            is_muted, muted_until = SpaceParticipantService.effective_mute_claims(
+                space_id=str(post_dto.id), user_id=str(user_id)
+            )
             payload = {
                 "user_id": str(user_id),
                 "username": str(user_id),
                 "room_id": str(post_dto.id),
-                "is_speaker": is_speaker,
+                "is_host": is_speaker,
+                "is_muted": is_muted,
+                "muted_until": muted_until,
                 "iss": getattr(settings, "WEBRTC_ISSUER"),
+                "aud": getattr(settings, "WEBRTC_AUDIENCE"),
                 "exp": int(time.time()) + 3600,  # 1 hour expiration
             }
             return Stream.stream_voice_peer_to_peer(payload=payload)
         return None
+
+    def _ensure_participant_record(self, post_dto, user_id):
+        try:
+            SpaceParticipantService.ensure_active_participant(
+                space_id=str(post_dto.id),
+                user_id=str(user_id),
+                created_by=str(post_dto.createdBy),
+            )
+        except Exception:
+            logger.exception(
+                "Failed to auto-create participant record on space join "
+                f"(space={post_dto.id}, user={user_id})"
+            )
 
 
 class ReminderView(APIView):

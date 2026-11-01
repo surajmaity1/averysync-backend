@@ -19,6 +19,11 @@ class ApiErrors:
     POST_SPACE_DELETE_FAILED = "Post or Space update failed with id {0}"
     POST_ALREADY_DELETED = "Post or Space already deleted with id {0}"
     SPACE_NOT_FOUND = "Space not found with id {0}"
+    SPACE_NOT_LIVE = "Space with id {0} is not live"
+    SPACE_ALREADY_ENDED = "Space with id {0} has ended"
+    PARTICIPANT_NOT_FOUND_WITH_ID = "Participant {0} not found in space {1}"
+    MODERATION_NOT_ALLOWED = "Only the host can moderate space {0}"
+    SELF_MUTE_NOT_ALLOWED = "Cannot mute yourself"
 
 
 class ValidationErrors:
@@ -30,6 +35,10 @@ class ValidationErrors:
     POST_ID_REQUIRED = "Post id required"
     REMINDER_REQUIRED = "Reminder required"
     VALID_POST_ID_FORMAT_REQUIRED = "Valid Post id required"
+    DURATION_SECONDS_INVALID = "durationSeconds must be between 1 and 86400"
+    MUTE_FIELDS_NOT_ALLOWED = (
+        "durationSeconds and reason are only valid when isMuted is true"
+    )
 
 
 class RepositoryError:
@@ -40,6 +49,9 @@ class RepositoryError:
     POST_DELETE_FAILED = "Failed to delete post or space with id: {0}"
     REMINDER_CREATE_UPDATE_FAILED = "Failed to create reminder: {0}"
     REMINDER_FETCH_FAILED = "Failed to fetch reminder: {0}"
+    PARTICIPANT_UPSERT_FAILED = "Failed to upsert participant: {0}"
+    PARTICIPANT_FETCH_FAILED = "Failed to fetch participant: {0}"
+    PARTICIPANT_EVENT_CREATE_FAILED = "Failed to create participant event: {0}"
 
 
 class AuthErrorMessages:

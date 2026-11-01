@@ -16,7 +16,8 @@ python manage.py runserver
 ### Quick start command after setup
 
 ```bash
-source venv/bin/activate && python manage.py runserver
+source venv/Scripts/activate && python manage.py runserver # windows
+source venv/bin/activate && python manage.py runserver # linux
 ```
 
 

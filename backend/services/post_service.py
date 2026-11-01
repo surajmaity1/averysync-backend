@@ -3,6 +3,9 @@ from backend.dto.post_dto import CreatePostDTO, PostDTO
 from backend.dto.responses.create_post_response import CreatePostResponse
 from backend.models.post import PostModel
 from backend.repositories.post_repository import PostRepository
+from backend.repositories.space_participant_repository import (
+    SpaceParticipantRepository,
+)
 from backend.dto.responses.error_response import (
     ApiErrorResponse,
     ApiErrorDetail,
@@ -188,5 +191,12 @@ class PostService:
 
         if not updated_post:
             raise ValueError(ApiErrors.POST_SPACE_UPDATE_FAILED.format(post_id))
+
+        if updated_post.status in (
+            PostModel.SpaceStatus.ENDED,
+            PostModel.SpaceStatus.CLOSED,
+        ):
+            ended_at = updated_post.ended_at or datetime.now(timezone.utc)
+            SpaceParticipantRepository.close_out(post_id=post_id, ended_at=ended_at)
 
         return cls._prepare_post_dto(updated_post)
