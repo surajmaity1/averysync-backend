@@ -5,13 +5,22 @@
 ```bash
 pyenv install 3.13.4
 python -m pip install virtualenv
-python -m virtualenv venv
-source venv/Scripts/activate
+python -m venv venv # on windows - python -m virtualenv venv
+source venv/bin/activate # on windows - source venv/Scripts/activate
 python -m pip install -r requirements.txt
 python manage.py makemigrations backend
 python manage.py migrate
 python manage.py runserver
 ```
+
+### Quick start command after setup
+
+```bash
+source venv/Scripts/activate && python manage.py runserver # windows
+source venv/bin/activate && python manage.py runserver # linux
+```
+
+
 
 ### To run tests locally:
 

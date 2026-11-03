@@ -16,6 +16,8 @@ class PostDTO(BaseModel):
     endedAt: datetime | None = None
     createdInTimezone: str | None = None
     status: SpaceStatus | None = None
+    likeCount: int = 0
+    likedByMe: bool = False
     createdAt: datetime
     updatedAt: datetime | None = None
     createdBy: str

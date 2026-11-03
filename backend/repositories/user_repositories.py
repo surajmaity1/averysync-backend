@@ -5,6 +5,7 @@ from django.db import transaction
 import logging
 from typing import Optional
 from backend.exceptions.auth_exceptions import UserNotFoundException
+from backend.constants.messages import RepositoryError
 
 
 logger = logging.getLogger(__name__)
@@ -49,3 +50,17 @@ class UserRepository:
             return UserModel.objects.get(id=user_id)
         except Exception as exception:
             raise UserNotFoundException() from exception
+
+    @classmethod
+    @transaction.atomic
+    def update_profile(cls, user_id: str, is_private: bool) -> UserModel:
+        try:
+            user = UserModel.objects.select_for_update().get(id=user_id)
+            user.is_private = is_private
+            user.save()
+            return user
+        except Exception as exception:
+            logger.error(f"Failed to update profile: {str(exception)}")
+            raise ValueError(
+                RepositoryError.PROFILE_UPDATE_FAILED.format(str(exception))
+            )

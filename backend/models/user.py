@@ -10,6 +10,9 @@ class UserModel(models.Model):
     name = models.CharField(max_length=255)
     image = models.URLField(max_length=500, null=True, blank=True)
     sign_in_provider = models.CharField(max_length=20, null=False)
+    is_private = models.BooleanField(default=False)
+    follower_count = models.IntegerField(default=0)
+    following_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(null=True, blank=True)
 

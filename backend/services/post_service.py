@@ -2,7 +2,11 @@ from datetime import datetime, timezone
 from backend.dto.post_dto import CreatePostDTO, PostDTO
 from backend.dto.responses.create_post_response import CreatePostResponse
 from backend.models.post import PostModel
+from backend.repositories.post_like_repository import PostLikeRepository
 from backend.repositories.post_repository import PostRepository
+from backend.repositories.space_participant_repository import (
+    SpaceParticipantRepository,
+)
 from backend.dto.responses.error_response import (
     ApiErrorResponse,
     ApiErrorDetail,
@@ -21,7 +25,7 @@ from backend.constants.messages import ApiErrors
 
 class PostService:
     @classmethod
-    def _prepare_post_dto(cls, post_model: PostModel):
+    def _prepare_post_dto(cls, post_model: PostModel, liked_by_me: bool = False):
         return PostDTO(
             id=post_model.id,
             title=post_model.title,
@@ -34,6 +38,8 @@ class PostService:
             endedAt=post_model.ended_at,
             createdInTimezone=post_model.created_in_timezone,
             status=post_model.status,
+            likeCount=post_model.like_count,
+            likedByMe=liked_by_me,
             createdAt=post_model.created_at,
             updatedAt=post_model.updated_at,
             createdBy=post_model.created_by,
@@ -105,14 +111,25 @@ class PostService:
             )
 
     @classmethod
-    def get_posts(cls) -> GetPostsResponse:
+    def get_posts(cls, viewer_id: str | None = None) -> GetPostsResponse:
         try:
-            posts = PostRepository.get_posts()
+            posts = list(PostRepository.get_posts())
 
             if not posts:
                 return GetPostsResponse(posts=[])
 
-            posts_dto = [cls._prepare_post_dto(post) for post in posts]
+            liked_ids = (
+                PostLikeRepository.liked_post_ids(
+                    viewer_id, [str(post.id) for post in posts]
+                )
+                if viewer_id
+                else set()
+            )
+
+            posts_dto = [
+                cls._prepare_post_dto(post, liked_by_me=str(post.id) in liked_ids)
+                for post in posts
+            ]
             return GetPostsResponse(posts=posts_dto)
         except ValidationError:
             return GetPostsResponse(
@@ -134,14 +151,20 @@ class PostService:
             )
 
     @classmethod
-    def get_post_by_id(cls, post_id: str) -> PostDTO:
+    def get_post_by_id(cls, post_id: str, viewer_id: str | None = None) -> PostDTO:
         try:
             post_model = PostRepository.get_by_id(post_id=post_id)
 
             if not post_model:
                 raise PostNotFoundException(post_id=post_id)
 
-            return cls._prepare_post_dto(post_model=post_model)
+            liked_by_me = (
+                PostLikeRepository.is_liked(user_id=viewer_id, post_id=post_id)
+                if viewer_id
+                else False
+            )
+
+            return cls._prepare_post_dto(post_model=post_model, liked_by_me=liked_by_me)
         except Exception as exception:
             raise ValueError(f"Post with id {post_id} not found: {str(exception)}")
 
@@ -188,5 +211,12 @@ class PostService:
 
         if not updated_post:
             raise ValueError(ApiErrors.POST_SPACE_UPDATE_FAILED.format(post_id))
+
+        if updated_post.status in (
+            PostModel.SpaceStatus.ENDED,
+            PostModel.SpaceStatus.CLOSED,
+        ):
+            ended_at = updated_post.ended_at or datetime.now(timezone.utc)
+            SpaceParticipantRepository.close_out(post_id=post_id, ended_at=ended_at)
 
         return cls._prepare_post_dto(updated_post)

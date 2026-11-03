@@ -19,6 +19,24 @@ class ApiErrors:
     POST_SPACE_DELETE_FAILED = "Post or Space update failed with id {0}"
     POST_ALREADY_DELETED = "Post or Space already deleted with id {0}"
     SPACE_NOT_FOUND = "Space not found with id {0}"
+    SPACE_NOT_LIVE = "Space with id {0} is not live"
+    SPACE_ALREADY_ENDED = "Space with id {0} has ended"
+    PARTICIPANT_NOT_FOUND_WITH_ID = "Participant {0} not found in space {1}"
+    MODERATION_NOT_ALLOWED = "Only the host can moderate space {0}"
+    SELF_MUTE_NOT_ALLOWED = "Cannot mute yourself"
+    CANNOT_FOLLOW_SELF = "Cannot follow yourself"
+    CANNOT_BLOCK_SELF = "Cannot block yourself"
+    FOLLOW_LIST_FORBIDDEN = "This account is private"
+    FOLLOW_REQUEST_NOT_FOUND = "No pending follow request from {0}"
+    NOT_FOLLOWING = "Not following user {0}"
+    FOLLOWER_NOT_FOUND = "User {0} is not a follower"
+    USER_BLOCKED = "User {0} is not available"
+    RESOURCE_NOT_FOUND = "Resource not found"
+    CANNOT_MESSAGE_SELF = "Cannot message yourself"
+    CONVERSATION_NOT_FOUND_WITH_ID = "Conversation {0} not found"
+    NOT_CONVERSATION_MEMBER = "Not a member of conversation {0}"
+    CHAT_REQUEST_NOT_FOUND = "No pending request for conversation {0}"
+    USER_UNAVAILABLE = "User {0} is not available"
 
 
 class ValidationErrors:
@@ -30,6 +48,18 @@ class ValidationErrors:
     POST_ID_REQUIRED = "Post id required"
     REMINDER_REQUIRED = "Reminder required"
     VALID_POST_ID_FORMAT_REQUIRED = "Valid Post id required"
+    DURATION_SECONDS_INVALID = "durationSeconds must be between 1 and 86400"
+    MUTE_FIELDS_NOT_ALLOWED = (
+        "durationSeconds and reason are only valid when isMuted is true"
+    )
+    PAGINATION_LIMIT_INVALID = "limit must be between 1 and 100"
+    PAGINATION_OFFSET_INVALID = "offset must be greater than or equal to 0"
+    BODY_REQUIRED = "body is required"
+    BODY_TOO_LONG = "body must be at most 4000 characters"
+    PARTICIPANT_ID_REQUIRED = "participantId is required"
+    CONVERSATION_TYPE_INVALID = "type must be DIRECT"
+    CURSOR_INVALID = "cursor is malformed"
+    SECTION_INVALID = "section must be 'primary' or 'requests'"
 
 
 class RepositoryError:
@@ -40,6 +70,24 @@ class RepositoryError:
     POST_DELETE_FAILED = "Failed to delete post or space with id: {0}"
     REMINDER_CREATE_UPDATE_FAILED = "Failed to create reminder: {0}"
     REMINDER_FETCH_FAILED = "Failed to fetch reminder: {0}"
+    PARTICIPANT_UPSERT_FAILED = "Failed to upsert participant: {0}"
+    PARTICIPANT_FETCH_FAILED = "Failed to fetch participant: {0}"
+    PARTICIPANT_EVENT_CREATE_FAILED = "Failed to create participant event: {0}"
+    FOLLOW_UPSERT_FAILED = "Failed to upsert follow edge: {0}"
+    FOLLOW_FETCH_FAILED = "Failed to fetch follow edge: {0}"
+    FOLLOW_LIST_FAILED = "Failed to list follow edges: {0}"
+    BLOCK_UPSERT_FAILED = "Failed to upsert block: {0}"
+    BLOCK_FETCH_FAILED = "Failed to fetch block: {0}"
+    COUNT_UPDATE_FAILED = "Failed to update counts: {0}"
+    PROFILE_UPDATE_FAILED = "Failed to update profile: {0}"
+    CONVERSATION_UPSERT_FAILED = "Failed to upsert conversation: {0}"
+    CONVERSATION_FETCH_FAILED = "Failed to fetch conversation: {0}"
+    MEMBER_UPSERT_FAILED = "Failed to upsert conversation member: {0}"
+    MEMBER_FETCH_FAILED = "Failed to fetch conversation member: {0}"
+    MESSAGE_CREATE_FAILED = "Failed to create message: {0}"
+    MESSAGE_FETCH_FAILED = "Failed to fetch message: {0}"
+    LIKE_UPSERT_FAILED = "Failed to upsert post like: {0}"
+    LIKE_FETCH_FAILED = "Failed to fetch post like: {0}"
 
 
 class AuthErrorMessages:
