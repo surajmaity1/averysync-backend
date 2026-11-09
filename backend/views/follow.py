@@ -4,6 +4,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from backend.constants.follow import FollowRequestAction
 from backend.constants.messages import ApiErrors
 from backend.dto.responses.error_response import (
     ApiErrorDetail,
@@ -20,6 +21,9 @@ from backend.exceptions.follow_exception import (
     FollowRequestNotFoundException,
     NotFollowingException,
     UserBlockedException,
+)
+from backend.serializers.follow_request_action_serializer import (
+    FollowRequestActionSerializer,
 )
 from backend.serializers.pagination_serializer import PaginationSerializer
 from backend.services.follow_service import FollowService
@@ -202,11 +206,17 @@ class FollowRequestsView(FollowErrorMixin, APIView):
 
 
 class FollowRequestActionView(FollowErrorMixin, APIView):
-    def post(self, request: Request, follower_id: str, action: str):
+    def patch(self, request: Request, follower_id: str):
         if not validate_uuid(uuid_string=follower_id):
             return self._bad_uuid(follower_id)
+
+        serializer = FollowRequestActionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return self._validation_error(serializer.errors)
+
+        action = serializer.validated_data["action"]
         try:
-            if action == "accept":
+            if action == FollowRequestAction.ACCEPT.value:
                 dto = FollowService.accept(
                     followee_id=request.user_id, follower_id=follower_id
                 )
@@ -215,7 +225,7 @@ class FollowRequestActionView(FollowErrorMixin, APIView):
                     status=status.HTTP_200_OK,
                 )
             FollowService.reject(followee_id=request.user_id, follower_id=follower_id)
-            return Response(data=None, status=status.HTTP_204_NO_CONTENT)
+            return Response(data=None, status=status.HTTP_200_OK)
         except Exception as exception:
             return self._handle_domain_exception(exception)
 

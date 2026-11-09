@@ -55,21 +55,14 @@ urlpatterns = [
         name="user_block",
     ),
     path(
-        "follow-requests",
+        "requests/follow",
         FollowRequestsView.as_view(),
-        name="follow_requests",
+        name="requests_follow",
     ),
     path(
-        "follow-requests/<uuid:follower_id>/accept",
+        "requests/follow/<uuid:follower_id>",
         FollowRequestActionView.as_view(),
-        {"action": "accept"},
-        name="follow_request_accept",
-    ),
-    path(
-        "follow-requests/<uuid:follower_id>/reject",
-        FollowRequestActionView.as_view(),
-        {"action": "reject"},
-        name="follow_request_reject",
+        name="follow_request_action",
     ),
     path(
         "followers/<uuid:follower_id>",
