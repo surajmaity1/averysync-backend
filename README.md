@@ -25,7 +25,7 @@ source venv/bin/activate && python manage.py runserver # linux
 ### To run tests locally:
 
 ```bash
-python3 manage.py test --verbosity 2
+source venv/bin/activate && python3 manage.py test --verbosity 2 # linux
 
 # for individual test (for repository specific test)
 python manage.py test <path>

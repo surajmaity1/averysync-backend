@@ -11,7 +11,6 @@ from backend.models.user import UserModel
 logger = logging.getLogger(__name__)
 
 ACCEPTED = UserFollowModel.FollowStatus.ACCEPTED
-PENDING = UserFollowModel.FollowStatus.PENDING
 
 
 class FollowRepository:
@@ -203,7 +202,10 @@ class FollowRepository:
         cls, user_id: str, limit: int, offset: int
     ) -> tuple[list[UserFollowModel], int]:
         return cls._list(
-            filters={"followee_id": user_id, "status": PENDING},
+            filters={
+                "followee_id": user_id,
+                "status": UserFollowModel.FollowStatus.PENDING,
+            },
             related="follower",
             ordering=("-requested_at", "-created_at"),
             limit=limit,

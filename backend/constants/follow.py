@@ -11,3 +11,8 @@ class RelationshipStatus(Enum):
     PENDING = "PENDING"
     FOLLOWING = "FOLLOWING"
     SELF = "SELF"
+
+
+class FollowRequestAction(Enum):
+    ACCEPT = "accept"
+    REJECT = "reject"
