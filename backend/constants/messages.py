@@ -60,6 +60,8 @@ class ValidationErrors:
     CONVERSATION_TYPE_INVALID = "type must be DIRECT"
     CURSOR_INVALID = "cursor is malformed"
     SECTION_INVALID = "section must be 'primary' or 'requests'"
+    FOLLOW_ACTION_REQUIRED = "action is required"
+    FOLLOW_ACTION_INVALID = "action must be 'accept' or 'reject'"
 
 
 class RepositoryError:

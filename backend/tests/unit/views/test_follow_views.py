@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 from django.test import RequestFactory, TestCase
+from django.urls import resolve, reverse
 from rest_framework import status
 
 from backend.dto.follow_dto import FollowDTO, FollowUserDTO
@@ -253,7 +254,7 @@ class FollowRequestsViewTests(TestCase):
             limit=20,
             offset=0,
         )
-        request = self.factory.get("/v1/follow-requests")
+        request = self.factory.get("/v1/requests/follow")
         request.user_id = self.caller_id
         response = FollowRequestsView.as_view()(request)
 
@@ -261,7 +262,7 @@ class FollowRequestsViewTests(TestCase):
         self.assertEqual(response.data["total"], 1)
 
     def test_invalid_pagination_returns_400(self):
-        request = self.factory.get("/v1/follow-requests?offset=-1")
+        request = self.factory.get("/v1/requests/follow?offset=-1")
         request.user_id = self.caller_id
         response = FollowRequestsView.as_view()(request)
 
@@ -270,7 +271,7 @@ class FollowRequestsViewTests(TestCase):
     @patch(f"{SERVICE}.get_requests")
     def test_unexpected_error_returns_500(self, mocked):
         mocked.side_effect = RuntimeError("boom")
-        request = self.factory.get("/v1/follow-requests")
+        request = self.factory.get("/v1/requests/follow")
         request.user_id = self.caller_id
         response = FollowRequestsView.as_view()(request)
 
@@ -283,21 +284,19 @@ class FollowRequestActionViewTests(TestCase):
         self.caller_id = str(uuid.uuid4())
         self.follower_id = str(uuid.uuid4())
 
-    def _post(self, follower_id, action):
-        request = self.factory.post(
-            f"/v1/follow-requests/x/{action}",
-            data=json.dumps({}),
+    def _patch(self, follower_id, data):
+        request = self.factory.patch(
+            f"/v1/requests/follow/{follower_id}",
+            data=json.dumps(data),
             content_type="application/json",
         )
         request.user_id = self.caller_id
-        return FollowRequestActionView.as_view()(
-            request, follower_id=follower_id, action=action
-        )
+        return FollowRequestActionView.as_view()(request, follower_id=follower_id)
 
     @patch(f"{SERVICE}.accept")
     def test_accept_returns_200(self, mocked):
         mocked.return_value = _follow_dto(self.follower_id, self.caller_id)
-        response = self._post(self.follower_id, "accept")
+        response = self._patch(self.follower_id, {"action": "accept"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mocked.assert_called_once_with(
@@ -307,28 +306,66 @@ class FollowRequestActionViewTests(TestCase):
     @patch(f"{SERVICE}.accept")
     def test_accept_not_found_returns_404(self, mocked):
         mocked.side_effect = FollowRequestNotFoundException(self.follower_id)
-        response = self._post(self.follower_id, "accept")
+        response = self._patch(self.follower_id, {"action": "accept"})
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     @patch(f"{SERVICE}.reject")
-    def test_reject_returns_204(self, mocked):
+    def test_reject_returns_200(self, mocked):
         mocked.return_value = None
-        response = self._post(self.follower_id, "reject")
+        response = self._patch(self.follower_id, {"action": "reject"})
 
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mocked.assert_called_once_with(
+            followee_id=self.caller_id, follower_id=self.follower_id
+        )
 
     @patch(f"{SERVICE}.reject")
     def test_reject_not_found_returns_404(self, mocked):
         mocked.side_effect = FollowRequestNotFoundException(self.follower_id)
-        response = self._post(self.follower_id, "reject")
+        response = self._patch(self.follower_id, {"action": "reject"})
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_bad_uuid_returns_400(self):
-        response = self._post("not-a-uuid", "accept")
+    def test_missing_action_returns_400(self):
+        response = self._patch(self.follower_id, {})
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_invalid_action_returns_400(self):
+        response = self._patch(self.follower_id, {"action": "unknown"})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_unknown_field_returns_400(self):
+        response = self._patch(
+            self.follower_id, {"action": "accept", "extra": "invalid"}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_bad_uuid_returns_400(self):
+        response = self._patch("not-a-uuid", {"action": "accept"})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_post_method_not_allowed(self):
+        request = self.factory.post(
+            f"/v1/requests/follow/{self.follower_id}",
+            data=json.dumps({"action": "accept"}),
+            content_type="application/json",
+        )
+        request.user_id = self.caller_id
+        response = FollowRequestActionView.as_view()(
+            request, follower_id=self.follower_id
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_url_resolves_to_view(self):
+        url = reverse("follow_request_action", kwargs={"follower_id": self.follower_id})
+        match = resolve(url)
+        self.assertEqual(match.func.view_class, FollowRequestActionView)
 
 
 class FollowerRemoveViewTests(TestCase):
