@@ -37,6 +37,9 @@ class ApiErrors:
     NOT_CONVERSATION_MEMBER = "Not a member of conversation {0}"
     CHAT_REQUEST_NOT_FOUND = "No pending request for conversation {0}"
     USER_UNAVAILABLE = "User {0} is not available"
+    ORGANIZATION_ALREADY_EXISTS = "Organization with short name {0} already exists"
+    ORGANIZATION_NOT_FOUND_WITH_ID = "Organization not found with id {0}"
+    ORGANIZATION_NOT_FOUND = "Organization not found"
 
 
 class ValidationErrors:
@@ -62,6 +65,13 @@ class ValidationErrors:
     SECTION_INVALID = "section must be 'primary' or 'requests'"
     FOLLOW_ACTION_REQUIRED = "action is required"
     FOLLOW_ACTION_INVALID = "action must be 'accept' or 'reject'"
+    ORGANIZATION_NAME_REQUIRED = "name is required"
+    SHORT_NAME_REQUIRED = "short name is required"
+    ORGANIZATION_TYPE_REQUIRED = "type is required"
+    ORGANIZATION_TYPE_INVALID = (
+        "type must be a valid organization type "
+        "(1: SCHOOL, 2: COLLEGE, 3: PRIVATE_TUITION, 4: PRIVATE_SECTOR)"
+    )
 
 
 class RepositoryError:
@@ -90,6 +100,8 @@ class RepositoryError:
     MESSAGE_FETCH_FAILED = "Failed to fetch message: {0}"
     LIKE_UPSERT_FAILED = "Failed to upsert post like: {0}"
     LIKE_FETCH_FAILED = "Failed to fetch post like: {0}"
+    ORGANIZATION_CREATION_FAILED = "Failed to create organization: {0}"
+    ORGANIZATION_FETCH_FAILED = "Failed to fetch organization: {0}"
 
 
 class AuthErrorMessages:
@@ -104,3 +116,4 @@ class AuthErrorMessages:
 class ApplicationMessages:
     GOOGLE_LOGOUT_SUCCESS = "Logged out successfully from Google"
     POST_CREATED = "Post created successfully"
+    ORGANIZATION_CREATED = "Organization created successfully"
