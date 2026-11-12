@@ -64,6 +64,14 @@ class GetAuthorizationUrlTests(TestCase):
         params = parse_qs(urlparse(url).query)
         self.assertEqual(params["redirect_uri"], [GOOGLE_OAUTH["REDIRECT_URI"]])
 
+    def test_uses_provided_state_when_given(self):
+        custom_state = "my-custom-signed-state"
+        url, state = GoogleOAuthService.get_authorization_url(state=custom_state)
+
+        params = parse_qs(urlparse(url).query)
+        self.assertEqual(state, custom_state)
+        self.assertEqual(params["state"], [custom_state])
+
     @patch("backend.services.google_oauth_service.secrets.token_urlsafe")
     def test_failure_raises_auth_exception(self, mock_token):
         mock_token.side_effect = RuntimeError("no entropy")

@@ -1,14 +1,29 @@
-from django.http import HttpResponseRedirect
-from drf_spectacular.utils import extend_schema, OpenApiResponse
-from rest_framework.request import Request
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from backend.services.google_oauth_service import GoogleOAuthService
-from rest_framework import status
 from django.conf import settings
+from django.http import HttpResponseRedirect
+from drf_spectacular.utils import OpenApiResponse, extend_schema
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from backend.constants.messages import ApplicationMessages
+from backend.exceptions.auth_exceptions import AuthException
+from backend.services.google_oauth_service import GoogleOAuthService
+from backend.services.oauth_state_service import OAuthStateService
 from backend.services.user_service import UserService
 from backend.utils.jwt_utils import generate_token_pair
-from backend.constants.messages import ApplicationMessages
+
+
+class OAuthRedirectResponse(HttpResponseRedirect):
+    """
+    Subclass of HttpResponseRedirect that allows registered native app custom schemes
+    (such as averysync:// or exp://) in addition to http/https.
+    """
+
+    def __init__(self, redirect_to: str, *args, **kwargs):
+        allowed = getattr(settings, "ALLOWED_REDIRECT_SCHEMES", ["averysync", "exp"])
+        self.allowed_schemes = ["http", "https"] + [s.lower() for s in allowed]
+        super().__init__(redirect_to, *args, **kwargs)
 
 
 class GoogleLogInView(APIView):
@@ -24,8 +39,29 @@ class GoogleLogInView(APIView):
     )
     def get(self, request: Request):
         redirect_url = request.query_params.get("redirectURL")
-        auth_url, state = GoogleOAuthService.get_authorization_url(redirect_url)
+        source_utm = request.query_params.get("sourceUtm")
+        is_mobile_param = request.query_params.get("is_mobile")
+
+        is_mobile = (
+            source_utm in ("mobile-app", "averysync-mobile")
+            or is_mobile_param == "true"
+        )
+        if redirect_url and (
+            redirect_url.startswith("averysync://") or redirect_url.startswith("exp://")
+        ):
+            is_mobile = True
+
+        if redirect_url and not OAuthStateService.is_safe_redirect_url(redirect_url):
+            redirect_url = None
+
+        state = OAuthStateService.generate_state(
+            redirect_url=redirect_url, is_mobile=is_mobile
+        )
         request.session["oauth_state"] = state
+
+        auth_url, state = GoogleOAuthService.get_authorization_url(
+            redirect_url=None, state=state
+        )
 
         if (
             request.headers.get("Accept") == "application/json"
@@ -38,31 +74,57 @@ class GoogleLogInView(APIView):
                     "data": {"authUrl": auth_url, "state": state},
                 }
             )
-        return HttpResponseRedirect(auth_url)
+        return OAuthRedirectResponse(auth_url)
 
 
 class GoogleCallbackView(APIView):
     def get(self, request: Request):
+        frontend = settings.SERVICES.get("FRONTEND", {})
+        frontend_base_url = (
+            f"{frontend.get('URL', '')}/{frontend.get('REDIRECT_PATH', '')}"
+        )
+        is_mobile = False
+        client_redirect_url = None
+
         try:
             code = request.query_params.get("code")
             state = request.query_params.get("state")
             error = request.query_params.get("error")
 
-            frontend = settings.SERVICES.get("FRONTEND", {})
-            frontend_base_url = (
-                f"{frontend.get('URL', '')}/{frontend.get('REDIRECT_PATH', '')}"
-            )
+            is_state_valid = False
+            if state:
+                try:
+                    state_payload = OAuthStateService.verify_and_decode_state(state)
+                    is_mobile = bool(state_payload.get("is_mobile", False))
+                    client_redirect_url = state_payload.get("redirect_url")
+
+                    if not is_mobile:
+                        stored_state = request.session.get("oauth_state")
+                        if stored_state and stored_state == state:
+                            is_state_valid = True
+                    else:
+                        is_state_valid = True
+                except AuthException:
+                    pass
+
+            def _error_redirect(err_code: str) -> OAuthRedirectResponse:
+                if is_mobile:
+                    target = client_redirect_url or "averysync://google-auth"
+                    return OAuthRedirectResponse(
+                        OAuthStateService.build_redirect_url(
+                            target, {"error": err_code}
+                        )
+                    )
+                return OAuthRedirectResponse(f"{frontend_base_url}?error={err_code}")
 
             if error:
-                return HttpResponseRedirect(f"{frontend_base_url}?error={error}")
+                return _error_redirect(error)
             if not code:
-                return HttpResponseRedirect(f"{frontend_base_url}?error=missing_code")
+                return _error_redirect("missing_code")
             if not state:
-                return HttpResponseRedirect(f"{frontend_base_url}?error=missing_state")
-
-            stored_state = request.session.get("oauth_state")
-            if not stored_state or stored_state != state:
-                return HttpResponseRedirect(f"{frontend_base_url}?error=invalid_state")
+                return _error_redirect("missing_state")
+            if not is_state_valid:
+                return _error_redirect("invalid_state")
 
             google_user_details = GoogleOAuthService.handle_calback(code)
             user = UserService.create_or_update_user(google_user_details)
@@ -74,13 +136,42 @@ class GoogleCallbackView(APIView):
                 }
             )
 
-            response = HttpResponseRedirect(frontend_base_url)
-            self._set_auth_cookies(response, tokens)
             request.session.pop("oauth_state", None)
 
+            if is_mobile:
+                target = client_redirect_url or "averysync://google-auth"
+                if not OAuthStateService.is_safe_redirect_url(target):
+                    target = "averysync://google-auth"
+                mobile_url = OAuthStateService.build_redirect_url(
+                    target,
+                    {
+                        "access": tokens["access_token"],
+                        "refresh": tokens["refresh_token"],
+                    },
+                )
+                return OAuthRedirectResponse(mobile_url)
+
+            target = (
+                client_redirect_url
+                if (
+                    client_redirect_url
+                    and OAuthStateService.is_safe_redirect_url(client_redirect_url)
+                )
+                else frontend_base_url
+            )
+            response = OAuthRedirectResponse(target)
+            self._set_auth_cookies(response, tokens)
             return response
+
         except Exception:
-            return HttpResponseRedirect(f"{frontend_base_url}?error=auth_failed")
+            if is_mobile:
+                target = client_redirect_url or "averysync://google-auth"
+                return OAuthRedirectResponse(
+                    OAuthStateService.build_redirect_url(
+                        target, {"error": "auth_failed"}
+                    )
+                )
+            return OAuthRedirectResponse(f"{frontend_base_url}?error=auth_failed")
 
     def _get_cookie_config(self):
         return {

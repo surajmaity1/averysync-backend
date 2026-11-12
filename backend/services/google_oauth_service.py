@@ -12,9 +12,13 @@ class GoogleOAuthService:
     GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
     @classmethod
-    def get_authorization_url(cls, redirect_url: str | None = None) -> tuple[str, str]:
+    def get_authorization_url(
+        cls,
+        redirect_url: str | None = None,
+        state: str | None = None,
+    ) -> tuple[str, str]:
         try:
-            state = secrets.token_urlsafe(32)
+            oauth_state = state if state is not None else secrets.token_urlsafe(32)
 
             params = {
                 "client_id": settings.GOOGLE_OAUTH["CLIENT_ID"],
@@ -23,11 +27,11 @@ class GoogleOAuthService:
                 "scope": "openid email profile",
                 "access_type": "offline",
                 "prompt": "consent",
-                "state": state,
+                "state": oauth_state,
             }
 
             auth_url = f"{cls.GOOGLE_AUTH_URL}?{urlencode(params)}"
-            return auth_url, state
+            return auth_url, oauth_state
         except Exception:
             raise AuthException(ApiErrors.GOOGLE_AUTH_FAILED)
 

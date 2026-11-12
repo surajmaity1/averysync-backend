@@ -1,11 +1,16 @@
 import os
-
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 from backend.utils.env import env_bool
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_DIR = BASE_DIR.parent
+
+# Automatically load environment variables from .env file
+load_dotenv(PROJECT_DIR / ".env")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -21,7 +26,13 @@ DEBUG = env_bool("DEBUG", default=False)
 ERROR_DETAILS = env_bool("ERROR_DETAILS", default=False)
 
 ALLOWED_HOSTS = (
-    os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
+    [
+        h.strip().strip("'\"[]")
+        for h in os.getenv("ALLOWED_HOSTS", "").split(",")
+        if h.strip().strip("'\"[]")
+    ]
+    if os.getenv("ALLOWED_HOSTS")
+    else ["localhost", "127.0.0.1", "10.0.2.2"]
 )
 
 LOGGING = {
@@ -211,6 +222,36 @@ COOKIE_SETTINGS = {
     "COOKIE_HTTPONLY": os.getenv("COOKIE_HTTPONLY", "True").lower() == "true",
     "COOKIE_SAMESITE": os.getenv("COOKIE_SAMESITE", "Strict"),
 }
+
+ALLOWED_REDIRECT_SCHEMES = (
+    [
+        s.strip().strip("'\"[]")
+        for s in os.getenv("ALLOWED_REDIRECT_SCHEMES").split(",")
+        if s.strip().strip("'\"[]")
+    ]
+    if os.getenv("ALLOWED_REDIRECT_SCHEMES")
+    else ["averysync", "exp"]
+)
+
+ALLOWED_REDIRECT_HOSTS = (
+    [
+        h.strip().strip("'\"[]")
+        for h in os.getenv("ALLOWED_REDIRECT_HOSTS").split(",")
+        if h.strip().strip("'\"[]")
+    ]
+    if os.getenv("ALLOWED_REDIRECT_HOSTS")
+    else []
+)
+
+ALLOWED_NATIVE_REDIRECT_URIS = (
+    [
+        u.strip().strip("'\"[]")
+        for u in os.getenv("ALLOWED_NATIVE_REDIRECT_URIS").split(",")
+        if u.strip().strip("'\"[]")
+    ]
+    if os.getenv("ALLOWED_NATIVE_REDIRECT_URIS")
+    else []
+)
 
 STREAM_API = os.getenv("STREAM_API", "http://localhost:8999")
 STREAM_API_SECRET_KEY = os.getenv("STREAM_API_SECRET_KEY", "")
