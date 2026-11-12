@@ -6,6 +6,7 @@ from backend.models.conversation import ConversationModel
 from backend.models.conversation_member import ConversationMemberModel
 from backend.models.follow import UserFollowModel
 from backend.models.message import MessageModel
+from backend.models.organization import OrganizationModel
 from backend.models.post import PostModel
 from backend.models.post_like import PostLikeModel
 from backend.models.space_participant import SpaceParticipantModel
@@ -136,3 +137,20 @@ def create_message(
     return MessageModel.objects.create(
         conversation=conversation, sender=sender, **defaults
     )
+
+
+def create_organization(**overrides) -> OrganizationModel:
+    suffix = uuid.uuid4().hex[:8]
+    short_name = overrides.pop(
+        "shortName", overrides.pop("short_name", f"test-org-{suffix}")
+    )
+    defaults = {
+        "name": f"Test Organization {suffix}",
+        "short_name": short_name,
+        "description": "Test description",
+        "type": OrganizationModel.OrganizationType.SCHOOL,
+        "is_deleted": False,
+        "created_by": str(uuid.uuid4()),
+    }
+    defaults.update(overrides)
+    return OrganizationModel.objects.create(**defaults)
