@@ -9,6 +9,7 @@ from .block import UserBlockModel
 from .conversation import ConversationModel
 from .conversation_member import ConversationMemberModel
 from .message import MessageModel
+from .organization import OrganizationModel
 
 __all__ = [
     "PostModel",
@@ -22,4 +23,5 @@ __all__ = [
     "ConversationModel",
     "ConversationMemberModel",
     "MessageModel",
+    "OrganizationModel",
 ]

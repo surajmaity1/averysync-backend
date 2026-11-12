@@ -27,6 +27,7 @@ from backend.views.conversation import (
 )
 from backend.views.message import MessagesView
 from backend.views.post_like import PostLikeView
+from backend.views.organization import OrganizationsView
 
 urlpatterns = [
     path("health", HealthView.as_view(), name="health"),
@@ -128,5 +129,10 @@ urlpatterns = [
         "posts/<str:space_id>/participants/<str:user_id>/mute",
         ParticipantMuteView.as_view(),
         name="posts_participant_mute",
+    ),
+    path(
+        "organizations",
+        OrganizationsView.as_view(),
+        name="organizations",
     ),
 ]

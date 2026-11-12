@@ -158,11 +158,31 @@ class JWTAuthenticationMiddleware:
         request.user_id = user_id
         request.user_email = user.email
 
+    def _get_access_token(self, request) -> str | None:
+        auth_header = request.headers.get("Authorization") or request.META.get(
+            "HTTP_AUTHORIZATION"
+        )
+        if auth_header and auth_header.startswith("Bearer "):
+            return auth_header.split(" ", 1)[1].strip()
+
+        return request.COOKIES.get(
+            settings.COOKIE_SETTINGS.get("ACCESS_TOKEN_COOKIE_NAME")
+        )
+
+    def _get_refresh_token(self, request) -> str | None:
+        refresh_header = request.headers.get("X-Refresh-Token") or request.META.get(
+            "HTTP_X_REFRESH_TOKEN"
+        )
+        if refresh_header:
+            return refresh_header.strip()
+
+        return request.COOKIES.get(
+            settings.COOKIE_SETTINGS.get("REFRESH_TOKEN_COOKIE_NAME")
+        )
+
     def _refresh_token(self, request) -> bool:
         try:
-            refresh_token = request.COOKIES.get(
-                settings.COOKIE_SETTINGS.get("REFRESH_TOKEN_COOKIE_NAME")
-            )
+            refresh_token = self._get_refresh_token(request)
 
             if not refresh_token:
                 return False
@@ -184,9 +204,7 @@ class JWTAuthenticationMiddleware:
 
     def _authentication(self, request) -> bool:
         try:
-            access_token = request.COOKIES.get(
-                settings.COOKIE_SETTINGS.get("ACCESS_TOKEN_COOKIE_NAME")
-            )
+            access_token = self._get_access_token(request)
 
             if access_token:
                 try:
