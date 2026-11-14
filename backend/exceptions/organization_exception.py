@@ -22,3 +22,13 @@ class OrganizationNotFoundException(Exception):
         else:
             self.message = ApiErrors.ORGANIZATION_NOT_FOUND
         super().__init__(self.message)
+
+
+class OrganizationUpdateForbiddenException(Exception):
+    def __init__(
+        self,
+        org_id: str,
+        message: str = ApiErrors.ORGANIZATION_UPDATE_NOT_ALLOWED,
+    ):
+        self.message = message.format(org_id)
+        super().__init__(self.message)

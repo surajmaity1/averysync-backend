@@ -27,7 +27,7 @@ from backend.views.conversation import (
 )
 from backend.views.message import MessagesView
 from backend.views.post_like import PostLikeView
-from backend.views.organization import OrganizationsView
+from backend.views.organization import OrganizationsView, OrganizationDetailView
 
 urlpatterns = [
     path("health", HealthView.as_view(), name="health"),
@@ -134,5 +134,10 @@ urlpatterns = [
         "organizations",
         OrganizationsView.as_view(),
         name="organizations",
+    ),
+    path(
+        "organizations/<uuid:organization_id>",
+        OrganizationDetailView.as_view(),
+        name="organization_detail",
     ),
 ]

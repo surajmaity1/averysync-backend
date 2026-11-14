@@ -5,15 +5,20 @@ from django.test import SimpleTestCase
 
 from backend.constants.messages import ApplicationMessages
 from backend.constants.organization import OrganizationType
-from backend.dto.organization_dto import OrganizationDTO
+from backend.dto.organization_dto import OrganizationDTO, UpdateOrganizationDTO
 from backend.dto.responses.create_organization_response import (
     CreateOrganizationResponse,
 )
 from backend.dto.responses.get_organizations_response import (
     GetOrganizationsResponse,
 )
+from backend.dto.responses.update_organization_response import (
+    UpdateOrganizationResponse,
+)
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
+    OrganizationNotFoundException,
+    OrganizationUpdateForbiddenException,
 )
 from backend.models.organization import OrganizationModel
 from backend.services.organization_service import OrganizationService
@@ -125,3 +130,122 @@ class OrganizationServiceTests(SimpleTestCase):
         self.assertIsInstance(response, GetOrganizationsResponse)
         self.assertEqual(response.data, [])
         mock_get_all.assert_called_once()
+
+    @patch(
+        "backend.services.organization_service.OrganizationRepository.get_by_short_name"
+    )
+    @patch("backend.services.organization_service.OrganizationRepository.update")
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_update_organization_success(
+        self, mock_get_by_id, mock_update, mock_get_by_sn
+    ):
+        mock_get_by_sn.return_value = None
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+
+        existing_model = MagicMock(spec=OrganizationModel)
+        existing_model.id = uuid.UUID(org_id)
+        existing_model.name = "Old School"
+        existing_model.short_name = "old-school"
+        existing_model.description = "Old description"
+        existing_model.type = OrganizationType.SCHOOL.value
+        existing_model.created_by = caller_id
+        existing_model.is_deleted = False
+        mock_get_by_id.return_value = existing_model
+
+        updated_model = MagicMock(spec=OrganizationModel)
+        updated_model.id = uuid.UUID(org_id)
+        updated_model.name = "Updated School"
+        updated_model.short_name = "updated-school"
+        updated_model.description = "Updated description"
+        updated_model.type = OrganizationType.COLLEGE.value
+        updated_model.created_by = caller_id
+        updated_model.is_deleted = False
+        mock_update.return_value = updated_model
+
+        dto = UpdateOrganizationDTO(
+            name="Updated School",
+            shortName="updated-school",
+            description="Updated description",
+            type=OrganizationType.COLLEGE,
+        )
+
+        response = OrganizationService.update_organization(
+            org_id=org_id,
+            user_id=caller_id,
+            dto=dto,
+        )
+
+        self.assertIsInstance(response, UpdateOrganizationResponse)
+        self.assertEqual(response.message, ApplicationMessages.ORGANIZATION_UPDATED)
+        self.assertEqual(response.data.name, "Updated School")
+        self.assertEqual(response.data.shortName, "updated-school")
+        self.assertEqual(response.data.type, OrganizationType.COLLEGE.value)
+        mock_get_by_id.assert_called_once_with(org_id)
+        mock_update.assert_called_once()
+
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_update_organization_not_found_raises_exception(self, mock_get_by_id):
+        mock_get_by_id.return_value = None
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+        dto = UpdateOrganizationDTO(name="New Name")
+
+        with self.assertRaises(OrganizationNotFoundException):
+            OrganizationService.update_organization(
+                org_id=org_id,
+                user_id=caller_id,
+                dto=dto,
+            )
+
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_update_organization_forbidden_for_non_creator(self, mock_get_by_id):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+        creator_id = str(uuid.uuid4())
+
+        existing_model = MagicMock(spec=OrganizationModel)
+        existing_model.id = uuid.UUID(org_id)
+        existing_model.created_by = creator_id
+        existing_model.is_deleted = False
+        mock_get_by_id.return_value = existing_model
+
+        dto = UpdateOrganizationDTO(name="New Name")
+
+        with self.assertRaises(OrganizationUpdateForbiddenException):
+            OrganizationService.update_organization(
+                org_id=org_id,
+                user_id=caller_id,
+                dto=dto,
+            )
+
+    @patch(
+        "backend.services.organization_service.OrganizationRepository.get_by_short_name"
+    )
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_update_organization_duplicate_short_name_raises_conflict(
+        self, mock_get_by_id, mock_get_by_sn
+    ):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+
+        existing_model = MagicMock(spec=OrganizationModel)
+        existing_model.id = uuid.UUID(org_id)
+        existing_model.short_name = "current-sn"
+        existing_model.created_by = caller_id
+        existing_model.is_deleted = False
+        mock_get_by_id.return_value = existing_model
+
+        other_model = MagicMock(spec=OrganizationModel)
+        other_model.id = uuid.uuid4()
+        other_model.short_name = "taken-sn"
+        mock_get_by_sn.return_value = other_model
+
+        dto = UpdateOrganizationDTO(shortName="taken-sn")
+
+        with self.assertRaises(OrganizationAlreadyExistsException):
+            OrganizationService.update_organization(
+                org_id=org_id,
+                user_id=caller_id,
+                dto=dto,
+            )

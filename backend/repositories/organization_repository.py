@@ -65,3 +65,35 @@ class OrganizationRepository:
             raise ValueError(
                 RepositoryError.ORGANIZATION_FETCH_FAILED.format(str(exception))
             )
+
+    @classmethod
+    @transaction.atomic
+    def update(
+        cls,
+        org_id: str,
+        update_data: dict,
+        updated_by: str | None = None,
+    ) -> OrganizationModel | None:
+        try:
+            org = (
+                OrganizationModel.objects.select_for_update()
+                .filter(id=org_id, is_deleted=False)
+                .first()
+            )
+            if not org:
+                return None
+
+            for field, value in update_data.items():
+                if hasattr(org, field):
+                    setattr(org, field, value)
+
+            if updated_by:
+                org.updated_by = updated_by
+
+            org.save()
+            return org
+        except Exception as exception:
+            logger.error(f"Failed to update organization: {str(exception)}")
+            raise ValueError(
+                RepositoryError.ORGANIZATION_UPDATE_FAILED.format(str(exception))
+            )

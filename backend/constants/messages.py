@@ -40,6 +40,7 @@ class ApiErrors:
     ORGANIZATION_ALREADY_EXISTS = "Organization with short name {0} already exists"
     ORGANIZATION_NOT_FOUND_WITH_ID = "Organization not found with id {0}"
     ORGANIZATION_NOT_FOUND = "Organization not found"
+    ORGANIZATION_UPDATE_NOT_ALLOWED = "Organization update not allowed with id {0}"
 
 
 class ValidationErrors:
@@ -102,6 +103,7 @@ class RepositoryError:
     LIKE_FETCH_FAILED = "Failed to fetch post like: {0}"
     ORGANIZATION_CREATION_FAILED = "Failed to create organization: {0}"
     ORGANIZATION_FETCH_FAILED = "Failed to fetch organization: {0}"
+    ORGANIZATION_UPDATE_FAILED = "Failed to update organization: {0}"
 
 
 class AuthErrorMessages:
@@ -117,3 +119,4 @@ class ApplicationMessages:
     GOOGLE_LOGOUT_SUCCESS = "Logged out successfully from Google"
     POST_CREATED = "Post created successfully"
     ORGANIZATION_CREATED = "Organization created successfully"
+    ORGANIZATION_UPDATED = "Organization updated successfully"
