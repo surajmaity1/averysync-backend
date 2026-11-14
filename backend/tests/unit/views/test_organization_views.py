@@ -11,14 +11,22 @@ from backend.constants.organization import OrganizationType
 from backend.dto.responses.create_organization_response import (
     CreateOrganizationResponse,
 )
+from backend.dto.responses.get_organizations_response import (
+    GetOrganizationsResponse,
+)
+from backend.dto.responses.update_organization_response import (
+    UpdateOrganizationResponse,
+)
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
+    OrganizationNotFoundException,
+    OrganizationUpdateForbiddenException,
 )
 from backend.tests.fixtures.organization import (
     build_organization_dto,
     valid_create_organization_payload,
 )
-from backend.views.organization import OrganizationsView
+from backend.views.organization import OrganizationDetailView, OrganizationsView
 
 SERVICE = "backend.views.organization.OrganizationService"
 
@@ -34,6 +42,11 @@ class OrganizationsViewTests(TestCase):
             data=json.dumps(body),
             content_type="application/json",
         )
+        request.user_id = self.caller_id
+        return OrganizationsView.as_view()(request)
+
+    def _get(self):
+        request = self.factory.get("/v1/organizations")
         request.user_id = self.caller_id
         return OrganizationsView.as_view()(request)
 
@@ -95,11 +108,40 @@ class OrganizationsViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(response.data["message"], ApiErrors.UNEXPECTED_ERROR_OCCURRED)
 
-    def test_get_method_not_allowed(self):
-        request = self.factory.get("/v1/organizations")
-        request.user_id = self.caller_id
-        response = OrganizationsView.as_view()(request)
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+    @patch(f"{SERVICE}.get_all_organizations")
+    def test_get_all_organizations_success_returns_200(self, mock_get_all):
+        dto1 = build_organization_dto(caller_id=self.caller_id, short_name="org-1")
+        dto2 = build_organization_dto(caller_id=self.caller_id, short_name="org-2")
+        mock_get_all.return_value = GetOrganizationsResponse(data=[dto1, dto2])
+
+        response = self._get()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("data", response.data)
+        self.assertEqual(len(response.data["data"]), 2)
+        self.assertEqual(response.data["data"][0]["shortName"], "org-1")
+        self.assertEqual(response.data["data"][1]["shortName"], "org-2")
+        mock_get_all.assert_called_once()
+
+    @patch(f"{SERVICE}.get_all_organizations")
+    def test_get_all_organizations_empty_list_returns_200(self, mock_get_all):
+        mock_get_all.return_value = GetOrganizationsResponse(data=[])
+
+        response = self._get()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"], [])
+        mock_get_all.assert_called_once()
+
+    @patch(f"{SERVICE}.get_all_organizations")
+    def test_get_all_organizations_unexpected_error_returns_500(self, mock_get_all):
+        mock_get_all.side_effect = RuntimeError("database failure")
+
+        response = self._get()
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.data["message"], ApiErrors.UNEXPECTED_ERROR_OCCURRED)
+        mock_get_all.assert_called_once()
 
     def test_url_resolves_under_v1_route(self):
         resolved = resolve("/v1/organizations")
@@ -111,3 +153,115 @@ class OrganizationsViewTests(TestCase):
 
     def test_reverse_organizations(self):
         self.assertEqual(reverse("organizations"), "/v1/organizations")
+
+
+class OrganizationDetailViewTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.caller_id = str(uuid.uuid4())
+        self.org_id = uuid.uuid4()
+
+    def _patch(self, org_id, body):
+        request = self.factory.patch(
+            f"/v1/organizations/{org_id}",
+            data=json.dumps(body),
+            content_type="application/json",
+        )
+        request.user_id = self.caller_id
+        return OrganizationDetailView.as_view()(request, organization_id=org_id)
+
+    @patch(f"{SERVICE}.update_organization")
+    def test_update_organization_success_returns_200(self, mock_update):
+        dto = build_organization_dto(
+            caller_id=self.caller_id,
+            org_id=self.org_id,
+            name="Updated Name",
+            short_name="updated-sn",
+        )
+        mock_update.return_value = UpdateOrganizationResponse(
+            message=ApplicationMessages.ORGANIZATION_UPDATED, data=dto
+        )
+
+        body = {"name": "Updated Name", "shortName": "updated-sn"}
+        response = self._patch(self.org_id, body)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data["message"], ApplicationMessages.ORGANIZATION_UPDATED
+        )
+        self.assertEqual(response.data["data"]["name"], "Updated Name")
+        self.assertEqual(response.data["data"]["shortName"], "updated-sn")
+        mock_update.assert_called_once()
+
+    def test_update_organization_non_uuid_id_returns_404(self):
+        response = self._patch("1", {"name": "Test"})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            response.data["message"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+        self.assertEqual(
+            response.data["errors"][0]["title"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+        self.assertEqual(
+            response.data["errors"][0]["description"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+
+    def test_update_organization_validation_error_returns_400(self):
+        body = {"name": "   "}
+        response = self._patch(self.org_id, body)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["message"], ApiErrors.VALIDATION_ERROR)
+
+    @patch(f"{SERVICE}.update_organization")
+    def test_update_organization_forbidden_returns_403(self, mock_update):
+        mock_update.side_effect = OrganizationUpdateForbiddenException(str(self.org_id))
+
+        response = self._patch(self.org_id, {"name": "Updated Name"})
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn(str(self.org_id), response.data["message"])
+
+    @patch(f"{SERVICE}.update_organization")
+    def test_update_organization_not_found_returns_404(self, mock_update):
+        mock_update.side_effect = OrganizationNotFoundException(str(self.org_id))
+
+        response = self._patch(self.org_id, {"name": "Updated Name"})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn(str(self.org_id), response.data["message"])
+
+    @patch(f"{SERVICE}.update_organization")
+    def test_update_organization_conflict_returns_409(self, mock_update):
+        mock_update.side_effect = OrganizationAlreadyExistsException("taken-sn")
+
+        response = self._patch(self.org_id, {"shortName": "taken-sn"})
+
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertIn("taken-sn", response.data["message"])
+
+    @patch(f"{SERVICE}.update_organization")
+    def test_update_organization_unexpected_error_returns_500(self, mock_update):
+        mock_update.side_effect = RuntimeError("database failure")
+
+        response = self._patch(self.org_id, {"name": "New Name"})
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.data["message"], ApiErrors.UNEXPECTED_ERROR_OCCURRED)
+
+    def test_organization_detail_url_resolves(self):
+        resolved = resolve(f"/v1/organizations/{self.org_id}")
+        self.assertEqual(resolved.func.view_class, OrganizationDetailView)
+
+    def test_organization_detail_url_resolves_with_non_uuid(self):
+        resolved = resolve("/v1/organizations/1")
+        self.assertEqual(resolved.func.view_class, OrganizationDetailView)
+
+    def test_reverse_organization_detail(self):
+        self.assertEqual(
+            reverse("organization_detail", kwargs={"organization_id": self.org_id}),
+            f"/v1/organizations/{self.org_id}",
+        )

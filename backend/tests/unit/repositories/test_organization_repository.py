@@ -93,3 +93,105 @@ class OrganizationRepositoryTests(TestCase):
 
         not_found = OrganizationRepository.get_by_id(str(uuid.uuid4()))
         self.assertIsNone(not_found)
+
+    def test_get_all_returns_only_non_deleted_organizations(self):
+        caller_id = str(uuid.uuid4())
+        org1 = create_organization(
+            short_name="active-org-1",
+            name="Active Org 1",
+            type=OrganizationModel.OrganizationType.SCHOOL,
+            created_by=caller_id,
+        )
+        org2 = create_organization(
+            short_name="active-org-2",
+            name="Active Org 2",
+            type=OrganizationModel.OrganizationType.COLLEGE,
+            created_by=caller_id,
+        )
+        create_organization(
+            short_name="deleted-org",
+            name="Deleted Org",
+            type=OrganizationModel.OrganizationType.PRIVATE_TUITION,
+            is_deleted=True,
+            created_by=caller_id,
+        )
+
+        results = OrganizationRepository.get_all()
+
+        returned_ids = [org.id for org in results]
+        self.assertIn(org1.id, returned_ids)
+        self.assertIn(org2.id, returned_ids)
+        self.assertEqual(len(results), 2)
+        for org in results:
+            self.assertFalse(org.is_deleted)
+
+    def test_get_all_returns_empty_list_when_no_active_organizations(self):
+        caller_id = str(uuid.uuid4())
+        create_organization(
+            short_name="deleted-only-org",
+            name="Deleted Only Org",
+            type=OrganizationModel.OrganizationType.PRIVATE_SECTOR,
+            is_deleted=True,
+            created_by=caller_id,
+        )
+
+        results = OrganizationRepository.get_all()
+
+        self.assertEqual(results, [])
+
+    def test_update_organization_success(self):
+        caller_id = str(uuid.uuid4())
+        updater_id = str(uuid.uuid4())
+        created = create_organization(
+            short_name="old-sn",
+            name="Old Org Name",
+            description="Old description",
+            type=OrganizationModel.OrganizationType.SCHOOL,
+            created_by=caller_id,
+        )
+
+        updated = OrganizationRepository.update(
+            org_id=str(created.id),
+            update_data={
+                "name": "Updated Org Name",
+                "short_name": "updated-sn",
+                "description": "Updated description",
+                "type": OrganizationModel.OrganizationType.COLLEGE,
+            },
+            updated_by=updater_id,
+        )
+
+        self.assertIsNotNone(updated)
+        self.assertEqual(updated.id, created.id)
+        self.assertEqual(updated.name, "Updated Org Name")
+        self.assertEqual(updated.short_name, "updated-sn")
+        self.assertEqual(updated.description, "Updated description")
+        self.assertEqual(updated.type, OrganizationModel.OrganizationType.COLLEGE)
+        self.assertEqual(updated.created_by, caller_id)
+        self.assertEqual(updated.updated_by, updater_id)
+        self.assertIsNotNone(updated.updated_at)
+
+    def test_update_organization_not_found_returns_none(self):
+        result = OrganizationRepository.update(
+            org_id=str(uuid.uuid4()),
+            update_data={"name": "Does Not Matter"},
+            updated_by=str(uuid.uuid4()),
+        )
+        self.assertIsNone(result)
+
+    def test_update_organization_soft_deleted_returns_none(self):
+        caller_id = str(uuid.uuid4())
+        created = create_organization(
+            short_name="deleted-update-org",
+            name="Deleted Org",
+            type=OrganizationModel.OrganizationType.SCHOOL,
+            is_deleted=True,
+            created_by=caller_id,
+        )
+
+        result = OrganizationRepository.update(
+            org_id=str(created.id),
+            update_data={"name": "New Name"},
+            updated_by=caller_id,
+        )
+        self.assertIsNone(result)

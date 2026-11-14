@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from backend.constants.messages import ApiErrors
-from backend.dto.organization_dto import CreateOrganizationDTO
+from backend.dto.organization_dto import CreateOrganizationDTO, UpdateOrganizationDTO
 from backend.dto.responses.error_response import (
     ApiErrorDetail,
     ApiErrorResponse,
@@ -14,11 +14,16 @@ from backend.dto.responses.error_response import (
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
     OrganizationNotFoundException,
+    OrganizationUpdateForbiddenException,
 )
 from backend.serializers.create_organization_serializer import (
     CreateOrganizationSerializer,
 )
+from backend.serializers.update_organization_serializer import (
+    UpdateOrganizationSerializer,
+)
 from backend.services.organization_service import OrganizationService
+from backend.utils.uuid_validation import validate_uuid
 
 
 class OrganizationErrorMixin:
@@ -71,6 +76,10 @@ class OrganizationErrorMixin:
             return self._error(
                 status.HTTP_404_NOT_FOUND, self._message_of(exception), exception
             )
+        if isinstance(exception, OrganizationUpdateForbiddenException):
+            return self._error(
+                status.HTTP_403_FORBIDDEN, self._message_of(exception), exception
+            )
         return self._error(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             ApiErrors.UNEXPECTED_ERROR_OCCURRED,
@@ -93,6 +102,43 @@ class OrganizationsView(OrganizationErrorMixin, APIView):
             return Response(
                 data=response.model_dump(mode="json"),
                 status=status.HTTP_201_CREATED,
+            )
+        except Exception as exception:
+            return self._handle_domain_exception(exception)
+
+    def get(self, request: Request) -> Response:
+        try:
+            response = OrganizationService.get_all_organizations()
+            return Response(
+                data=response.model_dump(mode="json"),
+                status=status.HTTP_200_OK,
+            )
+        except Exception as exception:
+            return self._handle_domain_exception(exception)
+
+
+class OrganizationDetailView(OrganizationErrorMixin, APIView):
+    def patch(self, request: Request, organization_id) -> Response:
+        org_id_str = str(organization_id)
+        if not validate_uuid(uuid_string=org_id_str):
+            return self._handle_domain_exception(
+                OrganizationNotFoundException(org_id=org_id_str)
+            )
+
+        serializer = UpdateOrganizationSerializer(data=request.data)
+        if not serializer.is_valid():
+            return self._validation_error(serializer.errors)
+
+        try:
+            dto = UpdateOrganizationDTO(**serializer.validated_data)
+            response = OrganizationService.update_organization(
+                org_id=org_id_str,
+                user_id=str(request.user_id),
+                dto=dto,
+            )
+            return Response(
+                data=response.model_dump(mode="json"),
+                status=status.HTTP_200_OK,
             )
         except Exception as exception:
             return self._handle_domain_exception(exception)
