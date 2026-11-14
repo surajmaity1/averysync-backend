@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 from django.db import transaction
 
 from backend.constants.messages import RepositoryError
@@ -32,7 +31,7 @@ class OrganizationRepository:
             )
 
     @classmethod
-    def get_by_short_name(cls, short_name: str) -> Optional[OrganizationModel]:
+    def get_by_short_name(cls, short_name: str) -> OrganizationModel | None:
         try:
             return OrganizationModel.objects.filter(
                 short_name=short_name, is_deleted=False
@@ -44,11 +43,25 @@ class OrganizationRepository:
             )
 
     @classmethod
-    def get_by_id(cls, org_id: str) -> Optional[OrganizationModel]:
+    def get_by_id(cls, org_id: str) -> OrganizationModel | None:
         try:
             return OrganizationModel.objects.filter(id=org_id, is_deleted=False).first()
         except Exception as exception:
             logger.error(f"Failed to fetch organization: {str(exception)}")
+            raise ValueError(
+                RepositoryError.ORGANIZATION_FETCH_FAILED.format(str(exception))
+            )
+
+    @classmethod
+    def get_all(cls) -> list[OrganizationModel]:
+        try:
+            return list(
+                OrganizationModel.objects.filter(is_deleted=False).order_by(
+                    "created_at"
+                )
+            )
+        except Exception as exception:
+            logger.error(f"Failed to fetch organizations: {str(exception)}")
             raise ValueError(
                 RepositoryError.ORGANIZATION_FETCH_FAILED.format(str(exception))
             )

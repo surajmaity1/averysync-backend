@@ -96,3 +96,13 @@ class OrganizationsView(OrganizationErrorMixin, APIView):
             )
         except Exception as exception:
             return self._handle_domain_exception(exception)
+
+    def get(self, request: Request) -> Response:
+        try:
+            response = OrganizationService.get_all_organizations()
+            return Response(
+                data=response.model_dump(mode="json"),
+                status=status.HTTP_200_OK,
+            )
+        except Exception as exception:
+            return self._handle_domain_exception(exception)

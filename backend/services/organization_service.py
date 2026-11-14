@@ -3,6 +3,9 @@ from backend.dto.organization_dto import CreateOrganizationDTO, OrganizationDTO
 from backend.dto.responses.create_organization_response import (
     CreateOrganizationResponse,
 )
+from backend.dto.responses.get_organizations_response import (
+    GetOrganizationsResponse,
+)
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
 )
@@ -44,3 +47,10 @@ class OrganizationService:
         created_org = OrganizationRepository.create(org_model)
         org_dto = cls._prepare_organization_dto(created_org)
         return CreateOrganizationResponse(data=org_dto)
+
+    @classmethod
+    def get_all_organizations(cls) -> GetOrganizationsResponse:
+        organizations = OrganizationRepository.get_all()
+        return GetOrganizationsResponse(
+            data=[cls._prepare_organization_dto(org) for org in organizations]
+        )

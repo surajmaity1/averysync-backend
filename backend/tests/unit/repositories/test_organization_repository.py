@@ -93,3 +93,48 @@ class OrganizationRepositoryTests(TestCase):
 
         not_found = OrganizationRepository.get_by_id(str(uuid.uuid4()))
         self.assertIsNone(not_found)
+
+    def test_get_all_returns_only_non_deleted_organizations(self):
+        caller_id = str(uuid.uuid4())
+        org1 = create_organization(
+            short_name="active-org-1",
+            name="Active Org 1",
+            type=OrganizationModel.OrganizationType.SCHOOL,
+            created_by=caller_id,
+        )
+        org2 = create_organization(
+            short_name="active-org-2",
+            name="Active Org 2",
+            type=OrganizationModel.OrganizationType.COLLEGE,
+            created_by=caller_id,
+        )
+        create_organization(
+            short_name="deleted-org",
+            name="Deleted Org",
+            type=OrganizationModel.OrganizationType.PRIVATE_TUITION,
+            is_deleted=True,
+            created_by=caller_id,
+        )
+
+        results = OrganizationRepository.get_all()
+
+        returned_ids = [org.id for org in results]
+        self.assertIn(org1.id, returned_ids)
+        self.assertIn(org2.id, returned_ids)
+        self.assertEqual(len(results), 2)
+        for org in results:
+            self.assertFalse(org.is_deleted)
+
+    def test_get_all_returns_empty_list_when_no_active_organizations(self):
+        caller_id = str(uuid.uuid4())
+        create_organization(
+            short_name="deleted-only-org",
+            name="Deleted Only Org",
+            type=OrganizationModel.OrganizationType.PRIVATE_SECTOR,
+            is_deleted=True,
+            created_by=caller_id,
+        )
+
+        results = OrganizationRepository.get_all()
+
+        self.assertEqual(results, [])

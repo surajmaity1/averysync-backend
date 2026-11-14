@@ -9,6 +9,9 @@ from backend.dto.organization_dto import OrganizationDTO
 from backend.dto.responses.create_organization_response import (
     CreateOrganizationResponse,
 )
+from backend.dto.responses.get_organizations_response import (
+    GetOrganizationsResponse,
+)
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
 )
@@ -74,3 +77,51 @@ class OrganizationServiceTests(SimpleTestCase):
             OrganizationService.create_organization(dto)
 
         self.assertIn("dup-school", str(ctx.exception))
+
+    @patch("backend.services.organization_service.OrganizationRepository.get_all")
+    def test_get_all_organizations_success(self, mock_get_all):
+        caller_id = str(uuid.uuid4())
+        model1 = MagicMock(spec=OrganizationModel)
+        model1.id = uuid.uuid4()
+        model1.name = "Apex Institute"
+        model1.short_name = "apex-inst"
+        model1.description = "Coaching institute"
+        model1.type = OrganizationType.PRIVATE_TUITION.value
+        model1.created_by = caller_id
+
+        model2 = MagicMock(spec=OrganizationModel)
+        model2.id = uuid.uuid4()
+        model2.name = "Tech University"
+        model2.short_name = "tech-uni"
+        model2.description = "Engineering college"
+        model2.type = OrganizationType.COLLEGE.value
+        model2.created_by = caller_id
+
+        mock_get_all.return_value = [model1, model2]
+
+        response = OrganizationService.get_all_organizations()
+
+        self.assertIsInstance(response, GetOrganizationsResponse)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0].id, model1.id)
+        self.assertEqual(response.data[0].name, "Apex Institute")
+        self.assertEqual(response.data[0].shortName, "apex-inst")
+        self.assertEqual(response.data[0].type, OrganizationType.PRIVATE_TUITION.value)
+        self.assertEqual(response.data[0].createdBy, caller_id)
+
+        self.assertEqual(response.data[1].id, model2.id)
+        self.assertEqual(response.data[1].name, "Tech University")
+        self.assertEqual(response.data[1].shortName, "tech-uni")
+        self.assertEqual(response.data[1].type, OrganizationType.COLLEGE.value)
+        self.assertEqual(response.data[1].createdBy, caller_id)
+        mock_get_all.assert_called_once()
+
+    @patch("backend.services.organization_service.OrganizationRepository.get_all")
+    def test_get_all_organizations_empty(self, mock_get_all):
+        mock_get_all.return_value = []
+
+        response = OrganizationService.get_all_organizations()
+
+        self.assertIsInstance(response, GetOrganizationsResponse)
+        self.assertEqual(response.data, [])
+        mock_get_all.assert_called_once()

@@ -11,6 +11,9 @@ from backend.constants.organization import OrganizationType
 from backend.dto.responses.create_organization_response import (
     CreateOrganizationResponse,
 )
+from backend.dto.responses.get_organizations_response import (
+    GetOrganizationsResponse,
+)
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
 )
@@ -34,6 +37,11 @@ class OrganizationsViewTests(TestCase):
             data=json.dumps(body),
             content_type="application/json",
         )
+        request.user_id = self.caller_id
+        return OrganizationsView.as_view()(request)
+
+    def _get(self):
+        request = self.factory.get("/v1/organizations")
         request.user_id = self.caller_id
         return OrganizationsView.as_view()(request)
 
@@ -95,11 +103,40 @@ class OrganizationsViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(response.data["message"], ApiErrors.UNEXPECTED_ERROR_OCCURRED)
 
-    def test_get_method_not_allowed(self):
-        request = self.factory.get("/v1/organizations")
-        request.user_id = self.caller_id
-        response = OrganizationsView.as_view()(request)
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+    @patch(f"{SERVICE}.get_all_organizations")
+    def test_get_all_organizations_success_returns_200(self, mock_get_all):
+        dto1 = build_organization_dto(caller_id=self.caller_id, short_name="org-1")
+        dto2 = build_organization_dto(caller_id=self.caller_id, short_name="org-2")
+        mock_get_all.return_value = GetOrganizationsResponse(data=[dto1, dto2])
+
+        response = self._get()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("data", response.data)
+        self.assertEqual(len(response.data["data"]), 2)
+        self.assertEqual(response.data["data"][0]["shortName"], "org-1")
+        self.assertEqual(response.data["data"][1]["shortName"], "org-2")
+        mock_get_all.assert_called_once()
+
+    @patch(f"{SERVICE}.get_all_organizations")
+    def test_get_all_organizations_empty_list_returns_200(self, mock_get_all):
+        mock_get_all.return_value = GetOrganizationsResponse(data=[])
+
+        response = self._get()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"], [])
+        mock_get_all.assert_called_once()
+
+    @patch(f"{SERVICE}.get_all_organizations")
+    def test_get_all_organizations_unexpected_error_returns_500(self, mock_get_all):
+        mock_get_all.side_effect = RuntimeError("database failure")
+
+        response = self._get()
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.data["message"], ApiErrors.UNEXPECTED_ERROR_OCCURRED)
+        mock_get_all.assert_called_once()
 
     def test_url_resolves_under_v1_route(self):
         resolved = resolve("/v1/organizations")
