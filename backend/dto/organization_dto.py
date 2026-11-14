@@ -30,6 +30,19 @@ class CreateOrganizationDTO(BaseModel):
         return parse_organization_type(value)
 
 
+class UpdateOrganizationDTO(BaseModel):
+    name: str | None = None
+    shortName: str | None = None
+    type: OrganizationType | None = None
+    description: str | None = None
+
+    @field_validator("type", mode="before")
+    def parse_type(cls, value):
+        if value is None:
+            return None
+        return parse_organization_type(value)
+
+
 class OrganizationDTO(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
