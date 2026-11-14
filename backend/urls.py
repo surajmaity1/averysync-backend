@@ -136,7 +136,7 @@ urlpatterns = [
         name="organizations",
     ),
     path(
-        "organizations/<uuid:organization_id>",
+        "organizations/<str:organization_id>",
         OrganizationDetailView.as_view(),
         name="organization_detail",
     ),

@@ -193,10 +193,21 @@ class OrganizationDetailViewTests(TestCase):
         self.assertEqual(response.data["data"]["shortName"], "updated-sn")
         mock_update.assert_called_once()
 
-    def test_update_organization_invalid_uuid_returns_400(self):
-        response = self._patch("not-a-uuid", {"name": "Test"})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["message"], ApiErrors.VALIDATION_ERROR)
+    def test_update_organization_non_uuid_id_returns_404(self):
+        response = self._patch("1", {"name": "Test"})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            response.data["message"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+        self.assertEqual(
+            response.data["errors"][0]["title"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+        self.assertEqual(
+            response.data["errors"][0]["description"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
 
     def test_update_organization_validation_error_returns_400(self):
         body = {"name": "   "}
@@ -243,6 +254,10 @@ class OrganizationDetailViewTests(TestCase):
 
     def test_organization_detail_url_resolves(self):
         resolved = resolve(f"/v1/organizations/{self.org_id}")
+        self.assertEqual(resolved.func.view_class, OrganizationDetailView)
+
+    def test_organization_detail_url_resolves_with_non_uuid(self):
+        resolved = resolve("/v1/organizations/1")
         self.assertEqual(resolved.func.view_class, OrganizationDetailView)
 
     def test_reverse_organization_detail(self):

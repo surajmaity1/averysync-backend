@@ -27,12 +27,6 @@ from backend.utils.uuid_validation import validate_uuid
 
 
 class OrganizationErrorMixin:
-    def _bad_uuid(self, value) -> Response:
-        message = ApiErrors.VALIDATION_ERROR
-        return self._error(
-            status.HTTP_400_BAD_REQUEST, message, ValueError(f"invalid id {value}")
-        )
-
     def _error(self, status_code: int, message: str, exception: Exception) -> Response:
         error_response = ApiErrorResponse(
             statusCode=status_code,
@@ -127,7 +121,9 @@ class OrganizationDetailView(OrganizationErrorMixin, APIView):
     def patch(self, request: Request, organization_id) -> Response:
         org_id_str = str(organization_id)
         if not validate_uuid(uuid_string=org_id_str):
-            return self._bad_uuid(org_id_str)
+            return self._handle_domain_exception(
+                OrganizationNotFoundException(org_id=org_id_str)
+            )
 
         serializer = UpdateOrganizationSerializer(data=request.data)
         if not serializer.is_valid():
