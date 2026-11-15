@@ -20,6 +20,7 @@ from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
     OrganizationDeleteForbiddenException,
     OrganizationNotFoundException,
+    OrganizationShortNameAlreadyUsedException,
     OrganizationUpdateForbiddenException,
 )
 from backend.models.organization import OrganizationModel
@@ -42,8 +43,12 @@ class OrganizationService:
     def create_organization(
         cls, dto: CreateOrganizationDTO
     ) -> CreateOrganizationResponse:
-        existing = OrganizationRepository.get_by_short_name(dto.shortName)
+        existing = OrganizationRepository.get_by_short_name(
+            dto.shortName, include_deleted=True
+        )
         if existing:
+            if existing.is_deleted:
+                raise OrganizationShortNameAlreadyUsedException(dto.shortName)
             raise OrganizationAlreadyExistsException(dto.shortName)
 
         raw_type = dto.type.value if hasattr(dto.type, "value") else int(dto.type)
@@ -91,6 +96,8 @@ class OrganizationService:
         if dto.shortName is not None and dto.shortName != org.short_name:
             existing = OrganizationRepository.get_by_short_name(dto.shortName)
             if existing and str(existing.id) != str(org_id):
+                if existing.is_deleted:
+                    raise OrganizationShortNameAlreadyUsedException(dto.shortName)
                 raise OrganizationAlreadyExistsException(dto.shortName)
 
         update_data = {}

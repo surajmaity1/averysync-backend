@@ -15,6 +15,7 @@ from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
     OrganizationDeleteForbiddenException,
     OrganizationNotFoundException,
+    OrganizationShortNameAlreadyUsedException,
     OrganizationUpdateForbiddenException,
 )
 from backend.serializers.create_organization_serializer import (
@@ -69,6 +70,10 @@ class OrganizationErrorMixin:
         return getattr(exception, "message", None) or str(exception)
 
     def _handle_domain_exception(self, exception: Exception) -> Response:
+        if isinstance(exception, OrganizationShortNameAlreadyUsedException):
+            return self._error(
+                status.HTTP_400_BAD_REQUEST, self._message_of(exception), exception
+            )
         if isinstance(exception, OrganizationAlreadyExistsException):
             return self._error(
                 status.HTTP_409_CONFLICT, self._message_of(exception), exception

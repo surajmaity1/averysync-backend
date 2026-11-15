@@ -31,11 +31,14 @@ class OrganizationRepository:
             )
 
     @classmethod
-    def get_by_short_name(cls, short_name: str) -> OrganizationModel | None:
+    def get_by_short_name(
+        cls, short_name: str, include_deleted: bool = False
+    ) -> OrganizationModel | None:
         try:
-            return OrganizationModel.objects.filter(
-                short_name=short_name, is_deleted=False
-            ).first()
+            queryset = OrganizationModel.objects.filter(short_name=short_name)
+            if not include_deleted:
+                queryset = queryset.filter(is_deleted=False)
+            return queryset.first()
         except Exception as exception:
             logger.error(f"Failed to fetch organization: {str(exception)}")
             raise ValueError(

@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from django.test import SimpleTestCase
 
-from backend.constants.messages import ApplicationMessages
+from backend.constants.messages import ApiErrors, ApplicationMessages
 from backend.constants.organization import OrganizationType
 from backend.dto.organization_dto import OrganizationDTO, UpdateOrganizationDTO
 from backend.dto.responses.create_organization_response import (
@@ -22,6 +22,7 @@ from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
     OrganizationDeleteForbiddenException,
     OrganizationNotFoundException,
+    OrganizationShortNameAlreadyUsedException,
     OrganizationUpdateForbiddenException,
 )
 from backend.models.organization import OrganizationModel
@@ -72,7 +73,9 @@ class OrganizationServiceTests(SimpleTestCase):
     def test_create_organization_duplicate_short_name_raises_exception(
         self, mock_get_by_sn
     ):
-        mock_get_by_sn.return_value = MagicMock(spec=OrganizationModel)
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.is_deleted = False
+        mock_get_by_sn.return_value = mock_model
         caller_id = str(uuid.uuid4())
 
         dto = build_create_organization_dto(
@@ -86,6 +89,32 @@ class OrganizationServiceTests(SimpleTestCase):
             OrganizationService.create_organization(dto)
 
         self.assertIn("dup-school", str(ctx.exception))
+
+    @patch(
+        "backend.services.organization_service.OrganizationRepository.get_by_short_name"
+    )
+    def test_create_organization_deleted_short_name_raises_short_name_used_exception(
+        self, mock_get_by_sn
+    ):
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.is_deleted = True
+        mock_get_by_sn.return_value = mock_model
+        caller_id = str(uuid.uuid4())
+
+        dto = build_create_organization_dto(
+            caller_id=caller_id,
+            name="New School",
+            short_name="deleted-school",
+            org_type=OrganizationType.SCHOOL,
+        )
+
+        with self.assertRaises(OrganizationShortNameAlreadyUsedException) as ctx:
+            OrganizationService.create_organization(dto)
+
+        self.assertEqual(
+            str(ctx.exception),
+            ApiErrors.ORGANIZATION_SHORT_NAME_ALREADY_USED,
+        )
 
     @patch("backend.services.organization_service.OrganizationRepository.get_all")
     def test_get_all_organizations_success(self, mock_get_all):
@@ -243,11 +272,44 @@ class OrganizationServiceTests(SimpleTestCase):
         other_model = MagicMock(spec=OrganizationModel)
         other_model.id = uuid.uuid4()
         other_model.short_name = "taken-sn"
+        other_model.is_deleted = False
         mock_get_by_sn.return_value = other_model
 
         dto = UpdateOrganizationDTO(shortName="taken-sn")
 
         with self.assertRaises(OrganizationAlreadyExistsException):
+            OrganizationService.update_organization(
+                org_id=org_id,
+                user_id=caller_id,
+                dto=dto,
+            )
+
+    @patch(
+        "backend.services.organization_service.OrganizationRepository.get_by_short_name"
+    )
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_update_organization_deleted_short_name_raises_short_name_used(
+        self, mock_get_by_id, mock_get_by_sn
+    ):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+
+        existing_model = MagicMock(spec=OrganizationModel)
+        existing_model.id = uuid.UUID(org_id)
+        existing_model.short_name = "current-sn"
+        existing_model.created_by = caller_id
+        existing_model.is_deleted = False
+        mock_get_by_id.return_value = existing_model
+
+        other_model = MagicMock(spec=OrganizationModel)
+        other_model.id = uuid.uuid4()
+        other_model.short_name = "deleted-sn"
+        other_model.is_deleted = True
+        mock_get_by_sn.return_value = other_model
+
+        dto = UpdateOrganizationDTO(shortName="deleted-sn")
+
+        with self.assertRaises(OrganizationShortNameAlreadyUsedException):
             OrganizationService.update_organization(
                 org_id=org_id,
                 user_id=caller_id,

@@ -78,6 +78,23 @@ class OrganizationRepositoryTests(TestCase):
         found = OrganizationRepository.get_by_short_name("deleted-org")
         self.assertIsNone(found)
 
+    def test_get_by_short_name_include_deleted(self):
+        caller_id = str(uuid.uuid4())
+        created = create_organization(
+            short_name="deleted-org-include",
+            name="Deleted Org",
+            type=OrganizationModel.OrganizationType.PRIVATE_TUITION,
+            is_deleted=True,
+            created_by=caller_id,
+        )
+
+        found = OrganizationRepository.get_by_short_name(
+            "deleted-org-include", include_deleted=True
+        )
+        self.assertIsNotNone(found)
+        self.assertEqual(found.id, created.id)
+        self.assertTrue(found.is_deleted)
+
     def test_get_by_id(self):
         caller_id = str(uuid.uuid4())
         created = create_organization(

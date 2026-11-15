@@ -11,6 +11,17 @@ class OrganizationAlreadyExistsException(Exception):
         super().__init__(self.message)
 
 
+class OrganizationShortNameAlreadyUsedException(Exception):
+    def __init__(
+        self,
+        short_name: str | None = None,
+        message: str = ApiErrors.ORGANIZATION_SHORT_NAME_ALREADY_USED,
+    ):
+        self.short_name = short_name
+        self.message = message
+        super().__init__(self.message)
+
+
 class OrganizationNotFoundException(Exception):
     def __init__(
         self,

@@ -42,6 +42,9 @@ class ApiErrors:
     ORGANIZATION_NOT_FOUND = "Organization not found"
     ORGANIZATION_UPDATE_NOT_ALLOWED = "Organization update not allowed with id {0}"
     ORGANIZATION_DELETE_NOT_ALLOWED = "Organization delete not allowed with id {0}"
+    ORGANIZATION_SHORT_NAME_ALREADY_USED = (
+        "This organizations short name is used already. Provide new short name."
+    )
 
 
 class ValidationErrors:
