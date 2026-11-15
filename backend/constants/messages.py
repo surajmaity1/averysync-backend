@@ -41,6 +41,10 @@ class ApiErrors:
     ORGANIZATION_NOT_FOUND_WITH_ID = "Organization not found with id {0}"
     ORGANIZATION_NOT_FOUND = "Organization not found"
     ORGANIZATION_UPDATE_NOT_ALLOWED = "Organization update not allowed with id {0}"
+    ORGANIZATION_DELETE_NOT_ALLOWED = "Organization delete not allowed with id {0}"
+    ORGANIZATION_SHORT_NAME_ALREADY_USED = (
+        "This organizations short name is used already. Provide new short name."
+    )
 
 
 class ValidationErrors:
@@ -104,6 +108,7 @@ class RepositoryError:
     ORGANIZATION_CREATION_FAILED = "Failed to create organization: {0}"
     ORGANIZATION_FETCH_FAILED = "Failed to fetch organization: {0}"
     ORGANIZATION_UPDATE_FAILED = "Failed to update organization: {0}"
+    ORGANIZATION_DELETE_FAILED = "Failed to soft-delete organization: {0}"
 
 
 class AuthErrorMessages:
@@ -120,3 +125,4 @@ class ApplicationMessages:
     POST_CREATED = "Post created successfully"
     ORGANIZATION_CREATED = "Organization created successfully"
     ORGANIZATION_UPDATED = "Organization updated successfully"
+    ORGANIZATION_DELETED = "Organization deleted successfully"

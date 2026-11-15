@@ -3,11 +3,14 @@ from unittest.mock import MagicMock, patch
 
 from django.test import SimpleTestCase
 
-from backend.constants.messages import ApplicationMessages
+from backend.constants.messages import ApiErrors, ApplicationMessages
 from backend.constants.organization import OrganizationType
 from backend.dto.organization_dto import OrganizationDTO, UpdateOrganizationDTO
 from backend.dto.responses.create_organization_response import (
     CreateOrganizationResponse,
+)
+from backend.dto.responses.get_organization_by_id_response import (
+    GetOrganizationByIdResponse,
 )
 from backend.dto.responses.get_organizations_response import (
     GetOrganizationsResponse,
@@ -17,7 +20,9 @@ from backend.dto.responses.update_organization_response import (
 )
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
+    OrganizationDeleteForbiddenException,
     OrganizationNotFoundException,
+    OrganizationShortNameAlreadyUsedException,
     OrganizationUpdateForbiddenException,
 )
 from backend.models.organization import OrganizationModel
@@ -68,7 +73,9 @@ class OrganizationServiceTests(SimpleTestCase):
     def test_create_organization_duplicate_short_name_raises_exception(
         self, mock_get_by_sn
     ):
-        mock_get_by_sn.return_value = MagicMock(spec=OrganizationModel)
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.is_deleted = False
+        mock_get_by_sn.return_value = mock_model
         caller_id = str(uuid.uuid4())
 
         dto = build_create_organization_dto(
@@ -82,6 +89,32 @@ class OrganizationServiceTests(SimpleTestCase):
             OrganizationService.create_organization(dto)
 
         self.assertIn("dup-school", str(ctx.exception))
+
+    @patch(
+        "backend.services.organization_service.OrganizationRepository.get_by_short_name"
+    )
+    def test_create_organization_deleted_short_name_raises_short_name_used_exception(
+        self, mock_get_by_sn
+    ):
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.is_deleted = True
+        mock_get_by_sn.return_value = mock_model
+        caller_id = str(uuid.uuid4())
+
+        dto = build_create_organization_dto(
+            caller_id=caller_id,
+            name="New School",
+            short_name="deleted-school",
+            org_type=OrganizationType.SCHOOL,
+        )
+
+        with self.assertRaises(OrganizationShortNameAlreadyUsedException) as ctx:
+            OrganizationService.create_organization(dto)
+
+        self.assertEqual(
+            str(ctx.exception),
+            ApiErrors.ORGANIZATION_SHORT_NAME_ALREADY_USED,
+        )
 
     @patch("backend.services.organization_service.OrganizationRepository.get_all")
     def test_get_all_organizations_success(self, mock_get_all):
@@ -239,6 +272,7 @@ class OrganizationServiceTests(SimpleTestCase):
         other_model = MagicMock(spec=OrganizationModel)
         other_model.id = uuid.uuid4()
         other_model.short_name = "taken-sn"
+        other_model.is_deleted = False
         mock_get_by_sn.return_value = other_model
 
         dto = UpdateOrganizationDTO(shortName="taken-sn")
@@ -249,3 +283,172 @@ class OrganizationServiceTests(SimpleTestCase):
                 user_id=caller_id,
                 dto=dto,
             )
+
+    @patch(
+        "backend.services.organization_service.OrganizationRepository.get_by_short_name"
+    )
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_update_organization_deleted_short_name_raises_short_name_used(
+        self, mock_get_by_id, mock_get_by_sn
+    ):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+
+        existing_model = MagicMock(spec=OrganizationModel)
+        existing_model.id = uuid.UUID(org_id)
+        existing_model.short_name = "current-sn"
+        existing_model.created_by = caller_id
+        existing_model.is_deleted = False
+        mock_get_by_id.return_value = existing_model
+
+        other_model = MagicMock(spec=OrganizationModel)
+        other_model.id = uuid.uuid4()
+        other_model.short_name = "deleted-sn"
+        other_model.is_deleted = True
+        mock_get_by_sn.return_value = other_model
+
+        dto = UpdateOrganizationDTO(shortName="deleted-sn")
+
+        with self.assertRaises(OrganizationShortNameAlreadyUsedException):
+            OrganizationService.update_organization(
+                org_id=org_id,
+                user_id=caller_id,
+                dto=dto,
+            )
+
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_get_organization_by_id_success(self, mock_get_by_id):
+        caller_id = str(uuid.uuid4())
+        org_id = uuid.uuid4()
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.id = org_id
+        mock_model.name = "Apex Institute"
+        mock_model.short_name = "apex-inst"
+        mock_model.description = "Coaching institute"
+        mock_model.type = OrganizationType.PRIVATE_TUITION.value
+        mock_model.is_deleted = False
+        mock_model.created_by = caller_id
+        mock_get_by_id.return_value = mock_model
+
+        response = OrganizationService.get_organization_by_id(str(org_id))
+
+        self.assertIsInstance(response, GetOrganizationByIdResponse)
+        self.assertEqual(response.data.id, org_id)
+        self.assertEqual(response.data.name, "Apex Institute")
+        self.assertEqual(response.data.shortName, "apex-inst")
+        self.assertEqual(response.data.description, "Coaching institute")
+        self.assertEqual(response.data.type, OrganizationType.PRIVATE_TUITION.value)
+        self.assertEqual(response.data.createdBy, caller_id)
+        mock_get_by_id.assert_called_once_with(str(org_id))
+
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_get_organization_by_id_not_found_raises_exception(self, mock_get_by_id):
+        mock_get_by_id.return_value = None
+        org_id = str(uuid.uuid4())
+
+        with self.assertRaises(OrganizationNotFoundException):
+            OrganizationService.get_organization_by_id(org_id)
+        mock_get_by_id.assert_called_once_with(org_id)
+
+    @patch("backend.services.organization_service.OrganizationRepository.soft_delete")
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_delete_organization_success(self, mock_get_by_id, mock_soft_delete):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.id = uuid.UUID(org_id)
+        mock_model.created_by = caller_id
+        mock_model.is_deleted = False
+        mock_get_by_id.return_value = mock_model
+
+        deleted_model = MagicMock(spec=OrganizationModel)
+        deleted_model.id = uuid.UUID(org_id)
+        deleted_model.is_deleted = True
+        mock_soft_delete.return_value = deleted_model
+
+        OrganizationService.delete_organization(org_id=org_id, user_id=caller_id)
+
+        mock_get_by_id.assert_called_once_with(org_id)
+        mock_soft_delete.assert_called_once_with(
+            org_id=org_id,
+            updated_by=caller_id,
+        )
+
+    @patch("backend.services.organization_service.OrganizationRepository.soft_delete")
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_delete_organization_not_found_raises_exception(
+        self, mock_get_by_id, mock_soft_delete
+    ):
+        mock_get_by_id.return_value = None
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+
+        with self.assertRaises(OrganizationNotFoundException):
+            OrganizationService.delete_organization(org_id=org_id, user_id=caller_id)
+
+        mock_get_by_id.assert_called_once_with(org_id)
+        mock_soft_delete.assert_not_called()
+
+    @patch("backend.services.organization_service.OrganizationRepository.soft_delete")
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_delete_organization_already_soft_deleted_raises_exception(
+        self, mock_get_by_id, mock_soft_delete
+    ):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.id = uuid.UUID(org_id)
+        mock_model.created_by = caller_id
+        mock_model.is_deleted = True
+        mock_get_by_id.return_value = mock_model
+
+        with self.assertRaises(OrganizationNotFoundException):
+            OrganizationService.delete_organization(org_id=org_id, user_id=caller_id)
+
+        mock_get_by_id.assert_called_once_with(org_id)
+        mock_soft_delete.assert_not_called()
+
+    @patch("backend.services.organization_service.OrganizationRepository.soft_delete")
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_delete_organization_forbidden_for_non_creator(
+        self, mock_get_by_id, mock_soft_delete
+    ):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+        creator_id = str(uuid.uuid4())
+
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.id = uuid.UUID(org_id)
+        mock_model.created_by = creator_id
+        mock_model.is_deleted = False
+        mock_get_by_id.return_value = mock_model
+
+        with self.assertRaises(OrganizationDeleteForbiddenException):
+            OrganizationService.delete_organization(org_id=org_id, user_id=caller_id)
+
+        mock_get_by_id.assert_called_once_with(org_id)
+        mock_soft_delete.assert_not_called()
+
+    @patch("backend.services.organization_service.OrganizationRepository.soft_delete")
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_delete_organization_repository_soft_delete_returns_none_raises_not_found(
+        self, mock_get_by_id, mock_soft_delete
+    ):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.id = uuid.UUID(org_id)
+        mock_model.created_by = caller_id
+        mock_model.is_deleted = False
+        mock_get_by_id.return_value = mock_model
+        mock_soft_delete.return_value = None
+
+        with self.assertRaises(OrganizationNotFoundException):
+            OrganizationService.delete_organization(org_id=org_id, user_id=caller_id)
+
+        mock_get_by_id.assert_called_once_with(org_id)
+        mock_soft_delete.assert_called_once_with(
+            org_id=org_id,
+            updated_by=caller_id,
+        )

@@ -7,6 +7,9 @@ from backend.dto.organization_dto import (
 from backend.dto.responses.create_organization_response import (
     CreateOrganizationResponse,
 )
+from backend.dto.responses.get_organization_by_id_response import (
+    GetOrganizationByIdResponse,
+)
 from backend.dto.responses.get_organizations_response import (
     GetOrganizationsResponse,
 )
@@ -15,7 +18,9 @@ from backend.dto.responses.update_organization_response import (
 )
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
+    OrganizationDeleteForbiddenException,
     OrganizationNotFoundException,
+    OrganizationShortNameAlreadyUsedException,
     OrganizationUpdateForbiddenException,
 )
 from backend.models.organization import OrganizationModel
@@ -38,8 +43,12 @@ class OrganizationService:
     def create_organization(
         cls, dto: CreateOrganizationDTO
     ) -> CreateOrganizationResponse:
-        existing = OrganizationRepository.get_by_short_name(dto.shortName)
+        existing = OrganizationRepository.get_by_short_name(
+            dto.shortName, include_deleted=True
+        )
         if existing:
+            if existing.is_deleted:
+                raise OrganizationShortNameAlreadyUsedException(dto.shortName)
             raise OrganizationAlreadyExistsException(dto.shortName)
 
         raw_type = dto.type.value if hasattr(dto.type, "value") else int(dto.type)
@@ -65,6 +74,15 @@ class OrganizationService:
         )
 
     @classmethod
+    def get_organization_by_id(cls, org_id: str) -> GetOrganizationByIdResponse:
+        org = OrganizationRepository.get_by_id(org_id)
+        if not org or org.is_deleted:
+            raise OrganizationNotFoundException(org_id)
+
+        org_dto = cls._prepare_organization_dto(org)
+        return GetOrganizationByIdResponse(data=org_dto)
+
+    @classmethod
     def update_organization(
         cls, org_id: str, user_id: str, dto: UpdateOrganizationDTO
     ) -> UpdateOrganizationResponse:
@@ -78,6 +96,8 @@ class OrganizationService:
         if dto.shortName is not None and dto.shortName != org.short_name:
             existing = OrganizationRepository.get_by_short_name(dto.shortName)
             if existing and str(existing.id) != str(org_id):
+                if existing.is_deleted:
+                    raise OrganizationShortNameAlreadyUsedException(dto.shortName)
                 raise OrganizationAlreadyExistsException(dto.shortName)
 
         update_data = {}
@@ -101,3 +121,19 @@ class OrganizationService:
 
         org_dto = cls._prepare_organization_dto(updated_org)
         return UpdateOrganizationResponse(data=org_dto)
+
+    @classmethod
+    def delete_organization(cls, org_id: str, user_id: str) -> None:
+        org = OrganizationRepository.get_by_id(org_id)
+        if not org or org.is_deleted:
+            raise OrganizationNotFoundException(org_id)
+
+        if str(org.created_by) != str(user_id):
+            raise OrganizationDeleteForbiddenException(org_id)
+
+        deleted_org = OrganizationRepository.soft_delete(
+            org_id=org_id,
+            updated_by=str(user_id),
+        )
+        if not deleted_org:
+            raise OrganizationNotFoundException(org_id)

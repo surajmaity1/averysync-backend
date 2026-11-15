@@ -11,6 +11,17 @@ class OrganizationAlreadyExistsException(Exception):
         super().__init__(self.message)
 
 
+class OrganizationShortNameAlreadyUsedException(Exception):
+    def __init__(
+        self,
+        short_name: str | None = None,
+        message: str = ApiErrors.ORGANIZATION_SHORT_NAME_ALREADY_USED,
+    ):
+        self.short_name = short_name
+        self.message = message
+        super().__init__(self.message)
+
+
 class OrganizationNotFoundException(Exception):
     def __init__(
         self,
@@ -29,6 +40,16 @@ class OrganizationUpdateForbiddenException(Exception):
         self,
         org_id: str,
         message: str = ApiErrors.ORGANIZATION_UPDATE_NOT_ALLOWED,
+    ):
+        self.message = message.format(org_id)
+        super().__init__(self.message)
+
+
+class OrganizationDeleteForbiddenException(Exception):
+    def __init__(
+        self,
+        org_id: str,
+        message: str = ApiErrors.ORGANIZATION_DELETE_NOT_ALLOWED,
     ):
         self.message = message.format(org_id)
         super().__init__(self.message)

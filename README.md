@@ -10,14 +10,14 @@ source venv/bin/activate # on windows - source venv/Scripts/activate
 python -m pip install -r requirements.txt
 python manage.py makemigrations backend
 python manage.py migrate
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8000
 ```
 
 ### Quick start command after setup
 
 ```bash
 source venv/Scripts/activate && python manage.py runserver # windows
-source venv/bin/activate && python manage.py runserver # linux
+source venv/bin/activate && python manage.py runserver 0.0.0.0:8000 # linux
 ```
 
 
