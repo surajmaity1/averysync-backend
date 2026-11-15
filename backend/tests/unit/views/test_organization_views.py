@@ -11,6 +11,9 @@ from backend.constants.organization import OrganizationType
 from backend.dto.responses.create_organization_response import (
     CreateOrganizationResponse,
 )
+from backend.dto.responses.get_organization_by_id_response import (
+    GetOrganizationByIdResponse,
+)
 from backend.dto.responses.get_organizations_response import (
     GetOrganizationsResponse,
 )
@@ -169,6 +172,65 @@ class OrganizationDetailViewTests(TestCase):
         )
         request.user_id = self.caller_id
         return OrganizationDetailView.as_view()(request, organization_id=org_id)
+
+    def _get(self, org_id):
+        request = self.factory.get(f"/v1/organizations/{org_id}")
+        request.user_id = self.caller_id
+        return OrganizationDetailView.as_view()(request, organization_id=org_id)
+
+    @patch(f"{SERVICE}.get_organization_by_id")
+    def test_get_organization_by_id_success_returns_200(self, mock_get):
+        dto = build_organization_dto(
+            caller_id=self.caller_id,
+            org_id=self.org_id,
+            name="Tech University",
+            short_name="tech-uni",
+        )
+        mock_get.return_value = GetOrganizationByIdResponse(data=dto)
+
+        response = self._get(self.org_id)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["data"]["id"], str(self.org_id))
+        self.assertEqual(response.data["data"]["name"], "Tech University")
+        self.assertEqual(response.data["data"]["shortName"], "tech-uni")
+        mock_get.assert_called_once_with(org_id=str(self.org_id))
+
+    def test_get_organization_by_id_non_uuid_returns_404(self):
+        response = self._get("1")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            response.data["message"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+        self.assertEqual(
+            response.data["errors"][0]["title"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+        self.assertEqual(
+            response.data["errors"][0]["description"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+
+    @patch(f"{SERVICE}.get_organization_by_id")
+    def test_get_organization_by_id_not_found_returns_404(self, mock_get):
+        mock_get.side_effect = OrganizationNotFoundException(str(self.org_id))
+
+        response = self._get(self.org_id)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn(str(self.org_id), response.data["message"])
+        mock_get.assert_called_once_with(org_id=str(self.org_id))
+
+    @patch(f"{SERVICE}.get_organization_by_id")
+    def test_get_organization_by_id_unexpected_error_returns_500(self, mock_get):
+        mock_get.side_effect = RuntimeError("database failure")
+
+        response = self._get(self.org_id)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.data["message"], ApiErrors.UNEXPECTED_ERROR_OCCURRED)
+        mock_get.assert_called_once_with(org_id=str(self.org_id))
 
     @patch(f"{SERVICE}.update_organization")
     def test_update_organization_success_returns_200(self, mock_update):

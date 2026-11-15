@@ -94,6 +94,19 @@ class OrganizationRepositoryTests(TestCase):
         not_found = OrganizationRepository.get_by_id(str(uuid.uuid4()))
         self.assertIsNone(not_found)
 
+    def test_get_by_id_respects_soft_delete(self):
+        caller_id = str(uuid.uuid4())
+        created = create_organization(
+            short_name="deleted-id-org",
+            name="Deleted ID Org",
+            type=OrganizationModel.OrganizationType.PRIVATE_SECTOR,
+            is_deleted=True,
+            created_by=caller_id,
+        )
+
+        found = OrganizationRepository.get_by_id(str(created.id))
+        self.assertIsNone(found)
+
     def test_get_all_returns_only_non_deleted_organizations(self):
         caller_id = str(uuid.uuid4())
         org1 = create_organization(

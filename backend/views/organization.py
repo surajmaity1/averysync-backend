@@ -118,6 +118,22 @@ class OrganizationsView(OrganizationErrorMixin, APIView):
 
 
 class OrganizationDetailView(OrganizationErrorMixin, APIView):
+    def get(self, request: Request, organization_id) -> Response:
+        org_id_str = str(organization_id)
+        if not validate_uuid(uuid_string=org_id_str):
+            return self._handle_domain_exception(
+                OrganizationNotFoundException(org_id=org_id_str)
+            )
+
+        try:
+            response = OrganizationService.get_organization_by_id(org_id=org_id_str)
+            return Response(
+                data=response.model_dump(mode="json"),
+                status=status.HTTP_200_OK,
+            )
+        except Exception as exception:
+            return self._handle_domain_exception(exception)
+
     def patch(self, request: Request, organization_id) -> Response:
         org_id_str = str(organization_id)
         if not validate_uuid(uuid_string=org_id_str):

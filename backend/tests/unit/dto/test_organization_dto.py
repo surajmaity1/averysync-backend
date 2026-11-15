@@ -7,6 +7,9 @@ from backend.dto.organization_dto import (
     OrganizationDTO,
     parse_organization_type,
 )
+from backend.dto.responses.get_organization_by_id_response import (
+    GetOrganizationByIdResponse,
+)
 from backend.tests.fixtures.organization import organizations_data
 
 
@@ -70,3 +73,24 @@ class OrganizationDtoAndTypeTests(SimpleTestCase):
             createdBy=sample["createdBy"],
         )
         self.assertEqual(dto.type, OrganizationType.SCHOOL.value)
+
+    def test_get_organization_by_id_response_serialization(self):
+        sample = organizations_data[0]
+        dto = OrganizationDTO(
+            id=uuid.UUID(sample["id"]),
+            name=sample["name"],
+            shortName=sample["shortName"],
+            description=sample["description"],
+            type=sample["type"],
+            createdBy=sample["createdBy"],
+        )
+        response = GetOrganizationByIdResponse(data=dto)
+        serialized = response.model_dump(mode="json")
+
+        self.assertIn("data", serialized)
+        self.assertEqual(serialized["data"]["id"], sample["id"])
+        self.assertEqual(serialized["data"]["name"], sample["name"])
+        self.assertEqual(serialized["data"]["shortName"], sample["shortName"])
+        self.assertEqual(serialized["data"]["description"], sample["description"])
+        self.assertEqual(serialized["data"]["type"], sample["type"])
+        self.assertEqual(serialized["data"]["createdBy"], sample["createdBy"])

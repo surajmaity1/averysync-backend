@@ -9,6 +9,9 @@ from backend.dto.organization_dto import OrganizationDTO, UpdateOrganizationDTO
 from backend.dto.responses.create_organization_response import (
     CreateOrganizationResponse,
 )
+from backend.dto.responses.get_organization_by_id_response import (
+    GetOrganizationByIdResponse,
+)
 from backend.dto.responses.get_organizations_response import (
     GetOrganizationsResponse,
 )
@@ -249,3 +252,49 @@ class OrganizationServiceTests(SimpleTestCase):
                 user_id=caller_id,
                 dto=dto,
             )
+
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_get_organization_by_id_success(self, mock_get_by_id):
+        caller_id = str(uuid.uuid4())
+        org_id = uuid.uuid4()
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.id = org_id
+        mock_model.name = "Apex Institute"
+        mock_model.short_name = "apex-inst"
+        mock_model.description = "Coaching institute"
+        mock_model.type = OrganizationType.PRIVATE_TUITION.value
+        mock_model.is_deleted = False
+        mock_model.created_by = caller_id
+        mock_get_by_id.return_value = mock_model
+
+        response = OrganizationService.get_organization_by_id(str(org_id))
+
+        self.assertIsInstance(response, GetOrganizationByIdResponse)
+        self.assertEqual(response.data.id, org_id)
+        self.assertEqual(response.data.name, "Apex Institute")
+        self.assertEqual(response.data.shortName, "apex-inst")
+        self.assertEqual(response.data.description, "Coaching institute")
+        self.assertEqual(response.data.type, OrganizationType.PRIVATE_TUITION.value)
+        self.assertEqual(response.data.createdBy, caller_id)
+        mock_get_by_id.assert_called_once_with(str(org_id))
+
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_get_organization_by_id_not_found_raises_exception(self, mock_get_by_id):
+        mock_get_by_id.return_value = None
+        org_id = str(uuid.uuid4())
+
+        with self.assertRaises(OrganizationNotFoundException):
+            OrganizationService.get_organization_by_id(org_id)
+        mock_get_by_id.assert_called_once_with(org_id)
+
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_get_organization_by_id_soft_deleted_raises_exception(self, mock_get_by_id):
+        org_id = str(uuid.uuid4())
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.id = uuid.UUID(org_id)
+        mock_model.is_deleted = True
+        mock_get_by_id.return_value = mock_model
+
+        with self.assertRaises(OrganizationNotFoundException):
+            OrganizationService.get_organization_by_id(org_id)
+        mock_get_by_id.assert_called_once_with(org_id)

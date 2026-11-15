@@ -7,6 +7,9 @@ from backend.dto.organization_dto import (
 from backend.dto.responses.create_organization_response import (
     CreateOrganizationResponse,
 )
+from backend.dto.responses.get_organization_by_id_response import (
+    GetOrganizationByIdResponse,
+)
 from backend.dto.responses.get_organizations_response import (
     GetOrganizationsResponse,
 )
@@ -63,6 +66,15 @@ class OrganizationService:
         return GetOrganizationsResponse(
             data=[cls._prepare_organization_dto(org) for org in organizations]
         )
+
+    @classmethod
+    def get_organization_by_id(cls, org_id: str) -> GetOrganizationByIdResponse:
+        org = OrganizationRepository.get_by_id(org_id)
+        if not org or org.is_deleted:
+            raise OrganizationNotFoundException(org_id)
+
+        org_dto = cls._prepare_organization_dto(org)
+        return GetOrganizationByIdResponse(data=org_dto)
 
     @classmethod
     def update_organization(
