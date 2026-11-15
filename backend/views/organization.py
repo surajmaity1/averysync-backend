@@ -13,7 +13,9 @@ from backend.dto.responses.error_response import (
 )
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
+    OrganizationDeleteForbiddenException,
     OrganizationNotFoundException,
+    OrganizationShortNameAlreadyUsedException,
     OrganizationUpdateForbiddenException,
 )
 from backend.serializers.create_organization_serializer import (
@@ -68,6 +70,10 @@ class OrganizationErrorMixin:
         return getattr(exception, "message", None) or str(exception)
 
     def _handle_domain_exception(self, exception: Exception) -> Response:
+        if isinstance(exception, OrganizationShortNameAlreadyUsedException):
+            return self._error(
+                status.HTTP_400_BAD_REQUEST, self._message_of(exception), exception
+            )
         if isinstance(exception, OrganizationAlreadyExistsException):
             return self._error(
                 status.HTTP_409_CONFLICT, self._message_of(exception), exception
@@ -76,7 +82,13 @@ class OrganizationErrorMixin:
             return self._error(
                 status.HTTP_404_NOT_FOUND, self._message_of(exception), exception
             )
-        if isinstance(exception, OrganizationUpdateForbiddenException):
+        if isinstance(
+            exception,
+            (
+                OrganizationUpdateForbiddenException,
+                OrganizationDeleteForbiddenException,
+            ),
+        ):
             return self._error(
                 status.HTTP_403_FORBIDDEN, self._message_of(exception), exception
             )
@@ -118,6 +130,22 @@ class OrganizationsView(OrganizationErrorMixin, APIView):
 
 
 class OrganizationDetailView(OrganizationErrorMixin, APIView):
+    def get(self, request: Request, organization_id) -> Response:
+        org_id_str = str(organization_id)
+        if not validate_uuid(uuid_string=org_id_str):
+            return self._handle_domain_exception(
+                OrganizationNotFoundException(org_id=org_id_str)
+            )
+
+        try:
+            response = OrganizationService.get_organization_by_id(org_id=org_id_str)
+            return Response(
+                data=response.model_dump(mode="json"),
+                status=status.HTTP_200_OK,
+            )
+        except Exception as exception:
+            return self._handle_domain_exception(exception)
+
     def patch(self, request: Request, organization_id) -> Response:
         org_id_str = str(organization_id)
         if not validate_uuid(uuid_string=org_id_str):
@@ -140,5 +168,21 @@ class OrganizationDetailView(OrganizationErrorMixin, APIView):
                 data=response.model_dump(mode="json"),
                 status=status.HTTP_200_OK,
             )
+        except Exception as exception:
+            return self._handle_domain_exception(exception)
+
+    def delete(self, request: Request, organization_id) -> Response:
+        org_id_str = str(organization_id)
+        if not validate_uuid(uuid_string=org_id_str):
+            return self._handle_domain_exception(
+                OrganizationNotFoundException(org_id=org_id_str)
+            )
+
+        try:
+            OrganizationService.delete_organization(
+                org_id=org_id_str,
+                user_id=str(request.user_id),
+            )
+            return Response(data=None, status=status.HTTP_204_NO_CONTENT)
         except Exception as exception:
             return self._handle_domain_exception(exception)
