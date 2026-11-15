@@ -13,6 +13,7 @@ from backend.dto.responses.error_response import (
 )
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
+    OrganizationDeleteForbiddenException,
     OrganizationNotFoundException,
     OrganizationUpdateForbiddenException,
 )
@@ -76,7 +77,13 @@ class OrganizationErrorMixin:
             return self._error(
                 status.HTTP_404_NOT_FOUND, self._message_of(exception), exception
             )
-        if isinstance(exception, OrganizationUpdateForbiddenException):
+        if isinstance(
+            exception,
+            (
+                OrganizationUpdateForbiddenException,
+                OrganizationDeleteForbiddenException,
+            ),
+        ):
             return self._error(
                 status.HTTP_403_FORBIDDEN, self._message_of(exception), exception
             )
@@ -156,5 +163,21 @@ class OrganizationDetailView(OrganizationErrorMixin, APIView):
                 data=response.model_dump(mode="json"),
                 status=status.HTTP_200_OK,
             )
+        except Exception as exception:
+            return self._handle_domain_exception(exception)
+
+    def delete(self, request: Request, organization_id) -> Response:
+        org_id_str = str(organization_id)
+        if not validate_uuid(uuid_string=org_id_str):
+            return self._handle_domain_exception(
+                OrganizationNotFoundException(org_id=org_id_str)
+            )
+
+        try:
+            OrganizationService.delete_organization(
+                org_id=org_id_str,
+                user_id=str(request.user_id),
+            )
+            return Response(data=None, status=status.HTTP_204_NO_CONTENT)
         except Exception as exception:
             return self._handle_domain_exception(exception)

@@ -20,6 +20,7 @@ from backend.dto.responses.update_organization_response import (
 )
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
+    OrganizationDeleteForbiddenException,
     OrganizationNotFoundException,
     OrganizationUpdateForbiddenException,
 )
@@ -287,14 +288,105 @@ class OrganizationServiceTests(SimpleTestCase):
             OrganizationService.get_organization_by_id(org_id)
         mock_get_by_id.assert_called_once_with(org_id)
 
+    @patch("backend.services.organization_service.OrganizationRepository.soft_delete")
     @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
-    def test_get_organization_by_id_soft_deleted_raises_exception(self, mock_get_by_id):
+    def test_delete_organization_success(self, mock_get_by_id, mock_soft_delete):
         org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
         mock_model = MagicMock(spec=OrganizationModel)
         mock_model.id = uuid.UUID(org_id)
+        mock_model.created_by = caller_id
+        mock_model.is_deleted = False
+        mock_get_by_id.return_value = mock_model
+
+        deleted_model = MagicMock(spec=OrganizationModel)
+        deleted_model.id = uuid.UUID(org_id)
+        deleted_model.is_deleted = True
+        mock_soft_delete.return_value = deleted_model
+
+        OrganizationService.delete_organization(org_id=org_id, user_id=caller_id)
+
+        mock_get_by_id.assert_called_once_with(org_id)
+        mock_soft_delete.assert_called_once_with(
+            org_id=org_id,
+            updated_by=caller_id,
+        )
+
+    @patch("backend.services.organization_service.OrganizationRepository.soft_delete")
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_delete_organization_not_found_raises_exception(
+        self, mock_get_by_id, mock_soft_delete
+    ):
+        mock_get_by_id.return_value = None
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+
+        with self.assertRaises(OrganizationNotFoundException):
+            OrganizationService.delete_organization(org_id=org_id, user_id=caller_id)
+
+        mock_get_by_id.assert_called_once_with(org_id)
+        mock_soft_delete.assert_not_called()
+
+    @patch("backend.services.organization_service.OrganizationRepository.soft_delete")
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_delete_organization_already_soft_deleted_raises_exception(
+        self, mock_get_by_id, mock_soft_delete
+    ):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.id = uuid.UUID(org_id)
+        mock_model.created_by = caller_id
         mock_model.is_deleted = True
         mock_get_by_id.return_value = mock_model
 
         with self.assertRaises(OrganizationNotFoundException):
-            OrganizationService.get_organization_by_id(org_id)
+            OrganizationService.delete_organization(org_id=org_id, user_id=caller_id)
+
         mock_get_by_id.assert_called_once_with(org_id)
+        mock_soft_delete.assert_not_called()
+
+    @patch("backend.services.organization_service.OrganizationRepository.soft_delete")
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_delete_organization_forbidden_for_non_creator(
+        self, mock_get_by_id, mock_soft_delete
+    ):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+        creator_id = str(uuid.uuid4())
+
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.id = uuid.UUID(org_id)
+        mock_model.created_by = creator_id
+        mock_model.is_deleted = False
+        mock_get_by_id.return_value = mock_model
+
+        with self.assertRaises(OrganizationDeleteForbiddenException):
+            OrganizationService.delete_organization(org_id=org_id, user_id=caller_id)
+
+        mock_get_by_id.assert_called_once_with(org_id)
+        mock_soft_delete.assert_not_called()
+
+    @patch("backend.services.organization_service.OrganizationRepository.soft_delete")
+    @patch("backend.services.organization_service.OrganizationRepository.get_by_id")
+    def test_delete_organization_repository_soft_delete_returns_none_raises_not_found(
+        self, mock_get_by_id, mock_soft_delete
+    ):
+        org_id = str(uuid.uuid4())
+        caller_id = str(uuid.uuid4())
+
+        mock_model = MagicMock(spec=OrganizationModel)
+        mock_model.id = uuid.UUID(org_id)
+        mock_model.created_by = caller_id
+        mock_model.is_deleted = False
+        mock_get_by_id.return_value = mock_model
+        mock_soft_delete.return_value = None
+
+        with self.assertRaises(OrganizationNotFoundException):
+            OrganizationService.delete_organization(org_id=org_id, user_id=caller_id)
+
+        mock_get_by_id.assert_called_once_with(org_id)
+        mock_soft_delete.assert_called_once_with(
+            org_id=org_id,
+            updated_by=caller_id,
+        )

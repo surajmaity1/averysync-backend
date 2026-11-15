@@ -32,3 +32,13 @@ class OrganizationUpdateForbiddenException(Exception):
     ):
         self.message = message.format(org_id)
         super().__init__(self.message)
+
+
+class OrganizationDeleteForbiddenException(Exception):
+    def __init__(
+        self,
+        org_id: str,
+        message: str = ApiErrors.ORGANIZATION_DELETE_NOT_ALLOWED,
+    ):
+        self.message = message.format(org_id)
+        super().__init__(self.message)

@@ -18,6 +18,7 @@ from backend.dto.responses.update_organization_response import (
 )
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
+    OrganizationDeleteForbiddenException,
     OrganizationNotFoundException,
     OrganizationUpdateForbiddenException,
 )
@@ -113,3 +114,19 @@ class OrganizationService:
 
         org_dto = cls._prepare_organization_dto(updated_org)
         return UpdateOrganizationResponse(data=org_dto)
+
+    @classmethod
+    def delete_organization(cls, org_id: str, user_id: str) -> None:
+        org = OrganizationRepository.get_by_id(org_id)
+        if not org or org.is_deleted:
+            raise OrganizationNotFoundException(org_id)
+
+        if str(org.created_by) != str(user_id):
+            raise OrganizationDeleteForbiddenException(org_id)
+
+        deleted_org = OrganizationRepository.soft_delete(
+            org_id=org_id,
+            updated_by=str(user_id),
+        )
+        if not deleted_org:
+            raise OrganizationNotFoundException(org_id)

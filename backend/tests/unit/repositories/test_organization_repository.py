@@ -208,3 +208,57 @@ class OrganizationRepositoryTests(TestCase):
             updated_by=caller_id,
         )
         self.assertIsNone(result)
+
+    def test_soft_delete_organization_success(self):
+        caller_id = str(uuid.uuid4())
+        updater_id = str(uuid.uuid4())
+        created = create_organization(
+            short_name="soft-delete-sn",
+            name="To Delete Org",
+            type=OrganizationModel.OrganizationType.SCHOOL,
+            created_by=caller_id,
+        )
+
+        deleted = OrganizationRepository.soft_delete(
+            org_id=str(created.id),
+            updated_by=updater_id,
+        )
+
+        self.assertIsNotNone(deleted)
+        self.assertTrue(deleted.is_deleted)
+        self.assertEqual(deleted.updated_by, updater_id)
+        self.assertIsNotNone(deleted.updated_at)
+
+        # Ensure subsequent get_by_id returns None due to is_deleted=False filter
+        self.assertIsNone(OrganizationRepository.get_by_id(str(created.id)))
+
+        # Verify directly in DB that is_deleted is True
+        raw_model = OrganizationModel.objects.get(id=created.id)
+        self.assertTrue(raw_model.is_deleted)
+
+    def test_soft_delete_organization_not_found_returns_none(self):
+        result = OrganizationRepository.soft_delete(
+            org_id=str(uuid.uuid4()),
+            updated_by=str(uuid.uuid4()),
+        )
+        self.assertIsNone(result)
+
+    def test_soft_delete_already_soft_deleted_returns_none(self):
+        caller_id = str(uuid.uuid4())
+        created = create_organization(
+            short_name="already-deleted-org",
+            name="Already Deleted Org",
+            type=OrganizationModel.OrganizationType.SCHOOL,
+            is_deleted=True,
+            created_by=caller_id,
+        )
+
+        result = OrganizationRepository.soft_delete(
+            org_id=str(created.id),
+            updated_by=caller_id,
+        )
+        self.assertIsNone(result)
+
+    def test_soft_delete_bad_uuid_raises_error(self):
+        with self.assertRaises(ValueError):
+            OrganizationRepository.soft_delete(org_id="not-a-uuid")

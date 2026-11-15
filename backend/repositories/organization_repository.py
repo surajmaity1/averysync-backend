@@ -97,3 +97,31 @@ class OrganizationRepository:
             raise ValueError(
                 RepositoryError.ORGANIZATION_UPDATE_FAILED.format(str(exception))
             )
+
+    @classmethod
+    @transaction.atomic
+    def soft_delete(
+        cls,
+        org_id: str,
+        updated_by: str | None = None,
+    ) -> OrganizationModel | None:
+        try:
+            org = (
+                OrganizationModel.objects.select_for_update()
+                .filter(id=org_id, is_deleted=False)
+                .first()
+            )
+            if not org:
+                return None
+
+            org.is_deleted = True
+            if updated_by:
+                org.updated_by = updated_by
+
+            org.save()
+            return org
+        except Exception as exception:
+            logger.error(f"Failed to soft-delete organization: {str(exception)}")
+            raise ValueError(
+                RepositoryError.ORGANIZATION_DELETE_FAILED.format(str(exception))
+            )

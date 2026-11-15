@@ -22,6 +22,7 @@ from backend.dto.responses.update_organization_response import (
 )
 from backend.exceptions.organization_exception import (
     OrganizationAlreadyExistsException,
+    OrganizationDeleteForbiddenException,
     OrganizationNotFoundException,
     OrganizationUpdateForbiddenException,
 )
@@ -178,6 +179,11 @@ class OrganizationDetailViewTests(TestCase):
         request.user_id = self.caller_id
         return OrganizationDetailView.as_view()(request, organization_id=org_id)
 
+    def _delete(self, org_id):
+        request = self.factory.delete(f"/v1/organizations/{org_id}")
+        request.user_id = self.caller_id
+        return OrganizationDetailView.as_view()(request, organization_id=org_id)
+
     @patch(f"{SERVICE}.get_organization_by_id")
     def test_get_organization_by_id_success_returns_200(self, mock_get):
         dto = build_organization_dto(
@@ -310,6 +316,59 @@ class OrganizationDetailViewTests(TestCase):
         mock_update.side_effect = RuntimeError("database failure")
 
         response = self._patch(self.org_id, {"name": "New Name"})
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.data["message"], ApiErrors.UNEXPECTED_ERROR_OCCURRED)
+
+    @patch(f"{SERVICE}.delete_organization")
+    def test_delete_organization_success_returns_204(self, mock_delete):
+        response = self._delete(self.org_id)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertIsNone(response.data)
+        mock_delete.assert_called_once_with(
+            org_id=str(self.org_id), user_id=self.caller_id
+        )
+
+    def test_delete_organization_non_uuid_id_returns_404(self):
+        response = self._delete("1")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(
+            response.data["message"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+        self.assertEqual(
+            response.data["errors"][0]["title"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+        self.assertEqual(
+            response.data["errors"][0]["description"],
+            ApiErrors.ORGANIZATION_NOT_FOUND_WITH_ID.format("1"),
+        )
+
+    @patch(f"{SERVICE}.delete_organization")
+    def test_delete_organization_not_found_returns_404(self, mock_delete):
+        mock_delete.side_effect = OrganizationNotFoundException(str(self.org_id))
+
+        response = self._delete(self.org_id)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn(str(self.org_id), response.data["message"])
+
+    @patch(f"{SERVICE}.delete_organization")
+    def test_delete_organization_forbidden_returns_403(self, mock_delete):
+        mock_delete.side_effect = OrganizationDeleteForbiddenException(str(self.org_id))
+
+        response = self._delete(self.org_id)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn(str(self.org_id), response.data["message"])
+
+    @patch(f"{SERVICE}.delete_organization")
+    def test_delete_organization_unexpected_error_returns_500(self, mock_delete):
+        mock_delete.side_effect = RuntimeError("database failure")
+
+        response = self._delete(self.org_id)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(response.data["message"], ApiErrors.UNEXPECTED_ERROR_OCCURRED)
